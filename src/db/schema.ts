@@ -154,7 +154,7 @@ export const products = sqliteTable("Products", {
   supplierId: integer("SupplierID").references(() => suppliers.supplierId),
   categoryId: integer("CategoryID").references(() => categories.categoryId),
   quantityPerUnit: text("QuantityPerUnit"),
-  unitPrice: numeric("UnitPrice"),
+  unitPrice: numeric("UnitPrice").notNull(),
   unitsInStock: integer("UnitsInStock").default(0),
   unitsOnOrder: integer("UnitsOnOrder").default(0),
   reorderLevel: integer("ReorderLevel").default(0),

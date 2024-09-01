@@ -3,12 +3,13 @@ import { db } from "../db";
 import { employees } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
 import { createInsertSchema } from "drizzle-zod";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import {
   idParamSchema,
   makePartialMinimumOneProperty,
 } from "../util/validation";
+import { z } from "zod";
 
 const insertEmployeeSchema = createInsertSchema(employees).omit({
   employeeId: true,

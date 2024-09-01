@@ -3,12 +3,13 @@ import { db } from "../db";
 import { customers as customers } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
 import { createInsertSchema } from "drizzle-zod";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import {
   idStringParamSchema,
   makePartialMinimumOneProperty,
 } from "../util/validation";
+import { z } from "zod";
 
 const insertCustomerSchema = createInsertSchema(customers);
 const patchCustomerSchema = makePartialMinimumOneProperty(
@@ -17,10 +18,20 @@ const patchCustomerSchema = makePartialMinimumOneProperty(
 
 export const customersGroup = new Hono()
 
-  .get("/", async (c) => {
-    const rows = await db.select().from(customers);
-    return c.json(rows);
-  })
+  .get(
+    "/",
+    zValidator("query", z.object({ query: z.string() }).partial()),
+    async (c) => {
+      const { query } = c.req.valid("query");
+      const rows = query
+        ? await db.all(sql`SELECT * FROM CustomerSearch
+          JOIN Customers USING (CustomerId)
+          WHERE CustomerSearch MATCH ${query + "*"} 
+          ORDER BY rank`)
+        : await db.select().from(customers);
+      return c.json(rows);
+    }
+  )
 
   .post("/", zValidator("json", insertCustomerSchema), async (c) => {
     const customer = c.req.valid("json");

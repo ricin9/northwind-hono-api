@@ -68,6 +68,7 @@ export const ordersGroup = new Hono()
 
     const order = body.order;
     const result = await db.transaction(async (trx) => {
+      // TODO : subtract stock from product
       let orderResult: ResultSet;
       try {
         orderResult = await trx.insert(orders).values(order);

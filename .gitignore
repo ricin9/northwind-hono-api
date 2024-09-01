@@ -1,6 +1,6 @@
 # prod
 dist/
-northwind.db
+*.db
 
 # dev
 .yarn/

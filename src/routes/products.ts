@@ -3,12 +3,13 @@ import { db } from "../db";
 import { products as products } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
 import { createInsertSchema } from "drizzle-zod";
-import { eq } from "drizzle-orm";
+import { eq, ilike } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import {
   idParamSchema,
   makePartialMinimumOneProperty,
 } from "../util/validation";
+import { z } from "zod";
 
 const insertProductSchema = createInsertSchema(products).omit({
   productId: true,
@@ -17,10 +18,22 @@ const patchProductSchema = makePartialMinimumOneProperty(insertProductSchema);
 
 export const productsGroup = new Hono()
 
-  .get("/", async (c) => {
-    const rows = await db.select().from(products);
-    return c.json(rows);
-  })
+  .get(
+    "/",
+    zValidator("query", z.object({ name: z.string() }).partial()),
+    async (c) => {
+      const { name } = c.req.valid("query");
+
+      const rows = name
+        ? await db
+            .select()
+            .from(products)
+            .where(ilike(products.productName, `%${name}%`))
+        : await db.select().from(products);
+
+      return c.json(rows);
+    }
+  )
 
   .post("/", zValidator("json", insertProductSchema), async (c) => {
     const product = c.req.valid("json");
@@ -33,12 +46,14 @@ export const productsGroup = new Hono()
     const product = await db.query.products.findFirst({
       where: eq(products.productId, id),
       with: {
-        category: true,
+        category: { columns: { picture: false } },
         supplier: {
-          columns: { supplierId: true, country: true, companyName: true },
+          columns: { supplierId: true, companyName: true },
         },
       },
     });
+
+    console.log({ product });
 
     return c.json(product);
   })
