@@ -25,7 +25,7 @@ export const productsGroup = new Hono()
   .post("/", zValidator("json", insertProductSchema), async (c) => {
     const product = c.req.valid("json");
     const result = await db.insert(products).values(product);
-    return c.json({ productId: result.lastInsertRowid?.toString() });
+    return c.json({ productId: Number(result.lastInsertRowid) });
   })
 
   .get("/:id", zValidator("param", idParamSchema), async (c) => {

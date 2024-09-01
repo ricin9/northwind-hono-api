@@ -1,18 +1,39 @@
 import { Hono } from "hono";
 import { db } from "../db";
-import { orders as orders } from "../db/schema";
+import { orderDetails, orders as orders, products } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
 import { createInsertSchema } from "drizzle-zod";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import {
   idParamSchema,
   makePartialMinimumOneProperty,
 } from "../util/validation";
+import { z } from "zod";
+import { LibsqlError, ResultSet } from "@libsql/client";
+
+const insertOrderDetailSchema = createInsertSchema(orderDetails, {
+  unitPrice: z // numeric string
+    .string()
+    .refine(
+      (val) => {
+        const parsed = Number(val);
+        return !isNaN(parsed) && parsed > 0;
+      },
+      { message: "Must be a positive number" }
+    )
+    .optional(),
+}).omit({ orderId: true });
 
 const insertOrderSchema = createInsertSchema(orders).omit({
   orderId: true,
 });
+
+const insertOrderWithDetailsSchema = z.object({
+  order: insertOrderSchema,
+  details: z.array(insertOrderDetailSchema).min(1),
+});
+
 const patchOrderSchema = makePartialMinimumOneProperty(insertOrderSchema);
 
 export const ordersGroup = new Hono()
@@ -22,10 +43,51 @@ export const ordersGroup = new Hono()
     return c.json(rows);
   })
 
-  .post("/", zValidator("json", insertOrderSchema), async (c) => {
-    const order = c.req.valid("json");
-    const result = await db.insert(orders).values(order);
-    return c.json({ orderId: result.lastInsertRowid?.toString() });
+  .post("/", zValidator("json", insertOrderWithDetailsSchema), async (c) => {
+    const body = c.req.valid("json");
+
+    const productIds = body.details.map((d) => d.productId);
+    const productRows = await db.query.products.findMany({
+      columns: { productId: true, unitPrice: true },
+      where: inArray(products.productId, productIds),
+      limit: productIds.length,
+    });
+
+    if (productRows.length !== productIds.length) {
+      throw new HTTPException(400, { message: "Invalid product id" });
+    }
+
+    // set unit price from product rows if not provided
+    const details = body.details.map((d) => {
+      const product = productRows.find((p) => p.productId === d.productId);
+      return {
+        ...d,
+        unitPrice: d.unitPrice ?? (product?.unitPrice as string),
+      };
+    });
+
+    const order = body.order;
+    const result = await db.transaction(async (trx) => {
+      let orderResult: ResultSet;
+      try {
+        orderResult = await trx.insert(orders).values(order);
+      } catch (err) {
+        if (err instanceof LibsqlError) {
+          throw new HTTPException(400, { message: "Invalid data" });
+        }
+        throw new HTTPException(500, { message: "Internal server error" });
+      }
+
+      const orderId = Number(orderResult.lastInsertRowid);
+
+      await trx
+        .insert(orderDetails)
+        .values(details.map((d) => ({ ...d, orderId })));
+
+      return orderResult;
+    });
+
+    return c.json({ orderId: Number(result.lastInsertRowid) });
   })
 
   .get("/:id", zValidator("param", idParamSchema), async (c) => {

@@ -25,7 +25,7 @@ export const employeesGroup = new Hono()
   .post("/", zValidator("json", insertEmployeeSchema), async (c) => {
     const employee = c.req.valid("json");
     const result = await db.insert(employees).values(employee);
-    return c.json({ employeeId: result.lastInsertRowid?.toString() });
+    return c.json({ employeeId: Number(result.lastInsertRowid) });
   })
 
   .get("/:id", zValidator("param", idParamSchema), async (c) => {

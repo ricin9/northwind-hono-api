@@ -119,7 +119,7 @@ export const orderDetails = sqliteTable(
       .references(() => products.productId),
     unitPrice: numeric("UnitPrice").notNull(),
     quantity: integer("Quantity").default(1).notNull(),
-    discount: real("Discount").notNull(),
+    discount: real("Discount").default(0).notNull(),
   },
   (table) => {
     return {

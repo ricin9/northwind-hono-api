@@ -23,5 +23,5 @@ const routes = app
   .route("/products", productsGroup)
   .route("/orders", ordersGroup);
 
-type AppType = typeof routes;
+export type AppType = typeof routes;
 export default app;

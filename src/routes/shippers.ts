@@ -25,7 +25,7 @@ export const shippersGroup = new Hono()
   .post("/", zValidator("json", insertShipperSchema), async (c) => {
     const shipper = c.req.valid("json");
     const result = await db.insert(shippers).values(shipper);
-    return c.json({ shipperId: result.lastInsertRowid?.toString() });
+    return c.json({ shipperId: Number(result.lastInsertRowid) });
   })
 
   .get("/:id", zValidator("param", idParamSchema), async (c) => {
