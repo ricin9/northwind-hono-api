@@ -2,10 +2,12 @@ import { Hono } from "hono";
 import {
   customersGroup,
   employeesGroup,
+  ordersGroup,
   productsGroup,
   shippersGroup,
   suppliersGroup,
 } from "./routes";
+import { hc } from "hono/client";
 
 const app = new Hono();
 
@@ -13,10 +15,13 @@ app.get("/", (c) => {
   return c.text("Hello sup!");
 });
 
-app.route("/employees", employeesGroup);
-app.route("/customers", customersGroup);
-app.route("/suppliers", suppliersGroup);
-app.route("/shippers", shippersGroup);
-app.route("/products", productsGroup);
+const routes = app
+  .route("/employees", employeesGroup)
+  .route("/customers", customersGroup)
+  .route("/suppliers", suppliersGroup)
+  .route("/shippers", shippersGroup)
+  .route("/products", productsGroup)
+  .route("/orders", ordersGroup);
 
+type AppType = typeof routes;
 export default app;

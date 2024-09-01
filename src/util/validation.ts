@@ -4,6 +4,10 @@ export const idParamSchema = z.object({
   id: z.string().pipe(z.coerce.number().min(1)),
 });
 
+export const idStringParamSchema = z.object({
+  id: z.string().min(1),
+});
+
 export function makePartialMinimumOneProperty<T extends z.ZodRawShape>(
   schema: Zod.ZodObject<T>
 ) {

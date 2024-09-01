@@ -27,6 +27,94 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "Picture": {
+          "autoincrement": false,
+          "name": "Picture",
+          "type": "blob",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "CustomerCustomerDemo": {
+      "name": "CustomerCustomerDemo",
+      "columns": {
+        "CustomerID": {
+          "autoincrement": false,
+          "name": "CustomerID",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "CustomerTypeID": {
+          "autoincrement": false,
+          "name": "CustomerTypeID",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "CustomerCustomerDemo_CustomerID_CustomerTypeID_pk": {
+          "columns": [
+            "CustomerID",
+            "CustomerTypeID"
+          ],
+          "name": "CustomerCustomerDemo_CustomerID_CustomerTypeID_pk"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "CustomerCustomerDemo_CustomerTypeID_CustomerDemographics_CustomerTypeID_fk": {
+          "name": "CustomerCustomerDemo_CustomerTypeID_CustomerDemographics_CustomerTypeID_fk",
+          "tableFrom": "CustomerCustomerDemo",
+          "tableTo": "CustomerDemographics",
+          "columnsFrom": [
+            "CustomerTypeID"
+          ],
+          "columnsTo": [
+            "CustomerTypeID"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "CustomerCustomerDemo_CustomerID_Customers_CustomerID_fk": {
+          "name": "CustomerCustomerDemo_CustomerID_Customers_CustomerID_fk",
+          "tableFrom": "CustomerCustomerDemo",
+          "tableTo": "Customers",
+          "columnsFrom": [
+            "CustomerID"
+          ],
+          "columnsTo": [
+            "CustomerID"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "CustomerDemographics": {
+      "name": "CustomerDemographics",
+      "columns": {
+        "CustomerTypeID": {
+          "autoincrement": false,
+          "name": "CustomerTypeID",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "CustomerDesc": {
+          "autoincrement": false,
+          "name": "CustomerDesc",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "compositePrimaryKeys": {},
@@ -38,15 +126,15 @@
       "name": "Customers",
       "columns": {
         "CustomerID": {
-          "autoincrement": true,
+          "autoincrement": false,
           "name": "CustomerID",
-          "type": "integer",
+          "type": "text",
           "primaryKey": true,
           "notNull": false
         },
-        "CustomerName": {
+        "CompanyName": {
           "autoincrement": false,
-          "name": "CustomerName",
+          "name": "CompanyName",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -54,6 +142,13 @@
         "ContactName": {
           "autoincrement": false,
           "name": "ContactName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ContactTitle": {
+          "autoincrement": false,
+          "name": "ContactTitle",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -72,6 +167,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "Region": {
+          "autoincrement": false,
+          "name": "Region",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "PostalCode": {
           "autoincrement": false,
           "name": "PostalCode",
@@ -82,6 +184,20 @@
         "Country": {
           "autoincrement": false,
           "name": "Country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Phone": {
+          "autoincrement": false,
+          "name": "Phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Fax": {
+          "autoincrement": false,
+          "name": "Fax",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -116,6 +232,20 @@
           "primaryKey": false,
           "notNull": false
         },
+        "Title": {
+          "autoincrement": false,
+          "name": "Title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "TitleOfCourtesy": {
+          "autoincrement": false,
+          "name": "TitleOfCourtesy",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "BirthDate": {
           "autoincrement": false,
           "name": "BirthDate",
@@ -123,77 +253,10 @@
           "primaryKey": false,
           "notNull": false
         },
-        "Photo": {
+        "HireDate": {
           "autoincrement": false,
-          "name": "Photo",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "Notes": {
-          "autoincrement": false,
-          "name": "Notes",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "compositePrimaryKeys": {},
-      "indexes": {},
-      "foreignKeys": {},
-      "uniqueConstraints": {}
-    },
-    "Shippers": {
-      "name": "Shippers",
-      "columns": {
-        "ShipperID": {
-          "autoincrement": true,
-          "name": "ShipperID",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": false
-        },
-        "ShipperName": {
-          "autoincrement": false,
-          "name": "ShipperName",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "Phone": {
-          "autoincrement": false,
-          "name": "Phone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "compositePrimaryKeys": {},
-      "indexes": {},
-      "foreignKeys": {},
-      "uniqueConstraints": {}
-    },
-    "Suppliers": {
-      "name": "Suppliers",
-      "columns": {
-        "SupplierID": {
-          "autoincrement": true,
-          "name": "SupplierID",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": false
-        },
-        "SupplierName": {
-          "autoincrement": false,
-          "name": "SupplierName",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "ContactName": {
-          "autoincrement": false,
-          "name": "ContactName",
-          "type": "text",
+          "name": "HireDate",
+          "type": "numeric",
           "primaryKey": false,
           "notNull": false
         },
@@ -207,6 +270,13 @@
         "City": {
           "autoincrement": false,
           "name": "City",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Region": {
+          "autoincrement": false,
+          "name": "Region",
           "type": "text",
           "primaryKey": false,
           "notNull": false
@@ -225,62 +295,45 @@
           "primaryKey": false,
           "notNull": false
         },
-        "Phone": {
+        "HomePhone": {
           "autoincrement": false,
-          "name": "Phone",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "compositePrimaryKeys": {},
-      "indexes": {},
-      "foreignKeys": {},
-      "uniqueConstraints": {}
-    },
-    "Products": {
-      "name": "Products",
-      "columns": {
-        "ProductID": {
-          "autoincrement": true,
-          "name": "ProductID",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": false
-        },
-        "ProductName": {
-          "autoincrement": false,
-          "name": "ProductName",
+          "name": "HomePhone",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "SupplierID": {
+        "Extension": {
           "autoincrement": false,
-          "name": "SupplierID",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "CategoryID": {
-          "autoincrement": false,
-          "name": "CategoryID",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "Unit": {
-          "autoincrement": false,
-          "name": "Unit",
+          "name": "Extension",
           "type": "text",
           "primaryKey": false,
           "notNull": false
         },
-        "Price": {
-          "default": 0,
+        "Photo": {
           "autoincrement": false,
-          "name": "Price",
-          "type": "numeric",
+          "name": "Photo",
+          "type": "blob",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Notes": {
+          "autoincrement": false,
+          "name": "Notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ReportsTo": {
+          "autoincrement": false,
+          "name": "ReportsTo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "PhotoPath": {
+          "autoincrement": false,
+          "name": "PhotoPath",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
@@ -288,28 +341,155 @@
       "compositePrimaryKeys": {},
       "indexes": {},
       "foreignKeys": {
-        "Products_SupplierID_Suppliers_SupplierID_fk": {
-          "name": "Products_SupplierID_Suppliers_SupplierID_fk",
-          "tableFrom": "Products",
-          "tableTo": "Suppliers",
+        "Employees_ReportsTo_Employees_EmployeeID_fk": {
+          "name": "Employees_ReportsTo_Employees_EmployeeID_fk",
+          "tableFrom": "Employees",
+          "tableTo": "Employees",
           "columnsFrom": [
-            "SupplierID"
+            "ReportsTo"
           ],
           "columnsTo": [
-            "SupplierID"
+            "EmployeeID"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "EmployeeTerritories": {
+      "name": "EmployeeTerritories",
+      "columns": {
+        "EmployeeID": {
+          "autoincrement": false,
+          "name": "EmployeeID",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "TerritoryID": {
+          "autoincrement": false,
+          "name": "TerritoryID",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "EmployeeTerritories_EmployeeID_TerritoryID_pk": {
+          "columns": [
+            "EmployeeID",
+            "TerritoryID"
+          ],
+          "name": "EmployeeTerritories_EmployeeID_TerritoryID_pk"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "EmployeeTerritories_TerritoryID_Territories_TerritoryID_fk": {
+          "name": "EmployeeTerritories_TerritoryID_Territories_TerritoryID_fk",
+          "tableFrom": "EmployeeTerritories",
+          "tableTo": "Territories",
+          "columnsFrom": [
+            "TerritoryID"
+          ],
+          "columnsTo": [
+            "TerritoryID"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "Products_CategoryID_Categories_CategoryID_fk": {
-          "name": "Products_CategoryID_Categories_CategoryID_fk",
-          "tableFrom": "Products",
-          "tableTo": "Categories",
+        "EmployeeTerritories_EmployeeID_Employees_EmployeeID_fk": {
+          "name": "EmployeeTerritories_EmployeeID_Employees_EmployeeID_fk",
+          "tableFrom": "EmployeeTerritories",
+          "tableTo": "Employees",
           "columnsFrom": [
-            "CategoryID"
+            "EmployeeID"
           ],
           "columnsTo": [
-            "CategoryID"
+            "EmployeeID"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "Order Details": {
+      "name": "Order Details",
+      "columns": {
+        "OrderID": {
+          "autoincrement": false,
+          "name": "OrderID",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ProductID": {
+          "autoincrement": false,
+          "name": "ProductID",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "UnitPrice": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "UnitPrice",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "Quantity": {
+          "default": 1,
+          "autoincrement": false,
+          "name": "Quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "Discount": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "Discount",
+          "type": "real",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {
+        "Order Details_OrderID_ProductID_pk": {
+          "columns": [
+            "OrderID",
+            "ProductID"
+          ],
+          "name": "Order Details_OrderID_ProductID_pk"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "Order Details_ProductID_Products_ProductID_fk": {
+          "name": "Order Details_ProductID_Products_ProductID_fk",
+          "tableFrom": "Order Details",
+          "tableTo": "Products",
+          "columnsFrom": [
+            "ProductID"
+          ],
+          "columnsTo": [
+            "ProductID"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Order Details_OrderID_Orders_OrderID_fk": {
+          "name": "Order Details_OrderID_Orders_OrderID_fk",
+          "tableFrom": "Order Details",
+          "tableTo": "Orders",
+          "columnsFrom": [
+            "OrderID"
+          ],
+          "columnsTo": [
+            "OrderID"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
@@ -325,12 +505,12 @@
           "name": "OrderID",
           "type": "integer",
           "primaryKey": true,
-          "notNull": false
+          "notNull": true
         },
         "CustomerID": {
           "autoincrement": false,
           "name": "CustomerID",
-          "type": "integer",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -348,10 +528,74 @@
           "primaryKey": false,
           "notNull": false
         },
-        "ShipperID": {
+        "RequiredDate": {
           "autoincrement": false,
-          "name": "ShipperID",
+          "name": "RequiredDate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ShippedDate": {
+          "autoincrement": false,
+          "name": "ShippedDate",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ShipVia": {
+          "autoincrement": false,
+          "name": "ShipVia",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Freight": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "Freight",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ShipName": {
+          "autoincrement": false,
+          "name": "ShipName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ShipAddress": {
+          "autoincrement": false,
+          "name": "ShipAddress",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ShipCity": {
+          "autoincrement": false,
+          "name": "ShipCity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ShipRegion": {
+          "autoincrement": false,
+          "name": "ShipRegion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ShipPostalCode": {
+          "autoincrement": false,
+          "name": "ShipPostalCode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ShipCountry": {
+          "autoincrement": false,
+          "name": "ShipCountry",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
@@ -359,12 +603,12 @@
       "compositePrimaryKeys": {},
       "indexes": {},
       "foreignKeys": {
-        "Orders_ShipperID_Shippers_ShipperID_fk": {
-          "name": "Orders_ShipperID_Shippers_ShipperID_fk",
+        "Orders_ShipVia_Shippers_ShipperID_fk": {
+          "name": "Orders_ShipVia_Shippers_ShipperID_fk",
           "tableFrom": "Orders",
           "tableTo": "Shippers",
           "columnsFrom": [
-            "ShipperID"
+            "ShipVia"
           ],
           "columnsTo": [
             "ShipperID"
@@ -401,63 +645,300 @@
       },
       "uniqueConstraints": {}
     },
-    "OrderDetails": {
-      "name": "OrderDetails",
+    "Products": {
+      "name": "Products",
       "columns": {
-        "OrderDetailID": {
-          "autoincrement": true,
-          "name": "OrderDetailID",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": false
-        },
-        "OrderID": {
-          "autoincrement": false,
-          "name": "OrderID",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
         "ProductID": {
-          "autoincrement": false,
+          "autoincrement": true,
           "name": "ProductID",
           "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ProductName": {
+          "autoincrement": false,
+          "name": "ProductName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "SupplierID": {
+          "autoincrement": false,
+          "name": "SupplierID",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
-        "Quantity": {
+        "CategoryID": {
           "autoincrement": false,
-          "name": "Quantity",
+          "name": "CategoryID",
           "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "QuantityPerUnit": {
+          "autoincrement": false,
+          "name": "QuantityPerUnit",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "UnitPrice": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "UnitPrice",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "UnitsInStock": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "UnitsInStock",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "UnitsOnOrder": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "UnitsOnOrder",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ReorderLevel": {
+          "default": 0,
+          "autoincrement": false,
+          "name": "ReorderLevel",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Discontinued": {
+          "default": "'0'",
+          "autoincrement": false,
+          "name": "Discontinued",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {},
+      "foreignKeys": {
+        "Products_SupplierID_Suppliers_SupplierID_fk": {
+          "name": "Products_SupplierID_Suppliers_SupplierID_fk",
+          "tableFrom": "Products",
+          "tableTo": "Suppliers",
+          "columnsFrom": [
+            "SupplierID"
+          ],
+          "columnsTo": [
+            "SupplierID"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Products_CategoryID_Categories_CategoryID_fk": {
+          "name": "Products_CategoryID_Categories_CategoryID_fk",
+          "tableFrom": "Products",
+          "tableTo": "Categories",
+          "columnsFrom": [
+            "CategoryID"
+          ],
+          "columnsTo": [
+            "CategoryID"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "Regions": {
+      "name": "Regions",
+      "columns": {
+        "RegionID": {
+          "autoincrement": false,
+          "name": "RegionID",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "RegionDescription": {
+          "autoincrement": false,
+          "name": "RegionDescription",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "Shippers": {
+      "name": "Shippers",
+      "columns": {
+        "ShipperID": {
+          "autoincrement": true,
+          "name": "ShipperID",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "CompanyName": {
+          "autoincrement": false,
+          "name": "CompanyName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "Phone": {
+          "autoincrement": false,
+          "name": "Phone",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
       },
       "compositePrimaryKeys": {},
       "indexes": {},
-      "foreignKeys": {
-        "OrderDetails_ProductID_Products_ProductID_fk": {
-          "name": "OrderDetails_ProductID_Products_ProductID_fk",
-          "tableFrom": "OrderDetails",
-          "tableTo": "Products",
-          "columnsFrom": [
-            "ProductID"
-          ],
-          "columnsTo": [
-            "ProductID"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "Suppliers": {
+      "name": "Suppliers",
+      "columns": {
+        "SupplierID": {
+          "autoincrement": true,
+          "name": "SupplierID",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
         },
-        "OrderDetails_OrderID_Orders_OrderID_fk": {
-          "name": "OrderDetails_OrderID_Orders_OrderID_fk",
-          "tableFrom": "OrderDetails",
-          "tableTo": "Orders",
+        "CompanyName": {
+          "autoincrement": false,
+          "name": "CompanyName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ContactName": {
+          "autoincrement": false,
+          "name": "ContactName",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ContactTitle": {
+          "autoincrement": false,
+          "name": "ContactTitle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Address": {
+          "autoincrement": false,
+          "name": "Address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "City": {
+          "autoincrement": false,
+          "name": "City",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Region": {
+          "autoincrement": false,
+          "name": "Region",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "PostalCode": {
+          "autoincrement": false,
+          "name": "PostalCode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Country": {
+          "autoincrement": false,
+          "name": "Country",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Phone": {
+          "autoincrement": false,
+          "name": "Phone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "Fax": {
+          "autoincrement": false,
+          "name": "Fax",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "HomePage": {
+          "autoincrement": false,
+          "name": "HomePage",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {},
+      "foreignKeys": {},
+      "uniqueConstraints": {}
+    },
+    "Territories": {
+      "name": "Territories",
+      "columns": {
+        "TerritoryID": {
+          "autoincrement": false,
+          "name": "TerritoryID",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "TerritoryDescription": {
+          "autoincrement": false,
+          "name": "TerritoryDescription",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "RegionID": {
+          "autoincrement": false,
+          "name": "RegionID",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "compositePrimaryKeys": {},
+      "indexes": {},
+      "foreignKeys": {
+        "Territories_RegionID_Regions_RegionID_fk": {
+          "name": "Territories_RegionID_Regions_RegionID_fk",
+          "tableFrom": "Territories",
+          "tableTo": "Regions",
           "columnsFrom": [
-            "OrderID"
+            "RegionID"
           ],
           "columnsTo": [
-            "OrderID"
+            "RegionID"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"

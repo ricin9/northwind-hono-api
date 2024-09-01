@@ -10,65 +10,63 @@ import {
   makePartialMinimumOneProperty,
 } from "../util/validation";
 
-export const productsGroup = new Hono();
-
-productsGroup.get("/", async (c) => {
-  const rows = await db.select().from(products);
-  return c.json(rows);
-});
-
-export const insertProductSchema = createInsertSchema(products).omit({
+const insertProductSchema = createInsertSchema(products).omit({
   productId: true,
 });
-
-productsGroup.post("/", zValidator("json", insertProductSchema), async (c) => {
-  const product = c.req.valid("json");
-  const result = await db.insert(products).values(product);
-  return c.json({ productId: result.lastInsertRowid?.toString() });
-});
-
-productsGroup.get("/:id", zValidator("param", idParamSchema), async (c) => {
-  const { id } = c.req.valid("param");
-  const product = await db.query.products.findFirst({
-    where: eq(products.productId, id),
-    with: {
-      category: true,
-      supplier: {
-        columns: { supplierId: true, supplierName: true, country: true },
-      },
-    },
-  });
-
-  return c.json(product);
-});
-
 const patchProductSchema = makePartialMinimumOneProperty(insertProductSchema);
 
-productsGroup.patch(
-  "/:id",
-  zValidator("param", idParamSchema),
-  zValidator("json", patchProductSchema),
-  async (c) => {
+export const productsGroup = new Hono()
+
+  .get("/", async (c) => {
+    const rows = await db.select().from(products);
+    return c.json(rows);
+  })
+
+  .post("/", zValidator("json", insertProductSchema), async (c) => {
+    const product = c.req.valid("json");
+    const result = await db.insert(products).values(product);
+    return c.json({ productId: result.lastInsertRowid?.toString() });
+  })
+
+  .get("/:id", zValidator("param", idParamSchema), async (c) => {
     const { id } = c.req.valid("param");
-    const body = c.req.valid("json");
+    const product = await db.query.products.findFirst({
+      where: eq(products.productId, id),
+      with: {
+        category: true,
+        supplier: {
+          columns: { supplierId: true, country: true, companyName: true },
+        },
+      },
+    });
 
-    const result = await db
-      .select({ productId: products.productId })
-      .from(products)
-      .where(eq(products.productId, id))
-      .limit(1);
+    return c.json(product);
+  })
 
-    if (result.length === 0) {
-      throw new HTTPException(404, { message: "product not found" });
+  .patch(
+    "/:id",
+    zValidator("param", idParamSchema),
+    zValidator("json", patchProductSchema),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const body = c.req.valid("json");
+
+      const result = await db
+        .select({ productId: products.productId })
+        .from(products)
+        .where(eq(products.productId, id))
+        .limit(1);
+
+      if (result.length === 0) {
+        throw new HTTPException(404, { message: "product not found" });
+      }
+
+      const patchedProduct = await db
+        .update(products)
+        .set(body)
+        .where(eq(products.productId, id))
+        .returning();
+
+      return c.json(patchedProduct);
     }
-
-    const patchedProduct = await db
-      .update(products)
-      .set(body)
-      .where(eq(products.productId, id))
-      .returning();
-
-    // console.log({ patchedProduct });
-    return c.json(patchedProduct);
-  }
-);
+  );
