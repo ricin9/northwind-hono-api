@@ -19,7 +19,9 @@ const patchEmployeeSchema = makePartialMinimumOneProperty(insertEmployeeSchema);
 export const employeesGroup = new Hono()
 
   .get("/", async (c) => {
-    const rows = await db.select().from(employees);
+    const rows = await db.query.employees.findMany({
+      columns: { photo: false, photoPath: false },
+    });
     return c.json(rows);
   })
 
@@ -31,10 +33,9 @@ export const employeesGroup = new Hono()
 
   .get("/:id", zValidator("param", idParamSchema), async (c) => {
     const { id } = c.req.valid("param");
-    const employee = await db
-      .select()
-      .from(employees)
-      .where(eq(employees.employeeId, id));
+    const employee = await db.query.employees.findFirst({
+      where: eq(employees.employeeId, id),
+    });
 
     return c.json(employee);
   })

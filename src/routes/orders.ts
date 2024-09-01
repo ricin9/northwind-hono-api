@@ -3,27 +3,14 @@ import { db } from "../db";
 import { orderDetails, orders as orders, products } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
 import { createInsertSchema } from "drizzle-zod";
-import { eq, inArray } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import {
   idParamSchema,
   makePartialMinimumOneProperty,
 } from "../util/validation";
 import { z } from "zod";
-import { LibsqlError, ResultSet } from "@libsql/client";
-
-const insertOrderDetailSchema = createInsertSchema(orderDetails, {
-  unitPrice: z // numeric string
-    .string()
-    .refine(
-      (val) => {
-        const parsed = Number(val);
-        return !isNaN(parsed) && parsed > 0;
-      },
-      { message: "Must be a positive number" }
-    )
-    .optional(),
-}).omit({ orderId: true });
+import { insertOrderDetailsSchema } from "./orderDetails";
 
 const insertOrderSchema = createInsertSchema(orders).omit({
   orderId: true,
@@ -31,7 +18,7 @@ const insertOrderSchema = createInsertSchema(orders).omit({
 
 const insertOrderWithDetailsSchema = z.object({
   order: insertOrderSchema,
-  details: z.array(insertOrderDetailSchema).min(1),
+  details: insertOrderDetailsSchema,
 });
 
 const patchOrderSchema = makePartialMinimumOneProperty(insertOrderSchema);
@@ -44,51 +31,58 @@ export const ordersGroup = new Hono()
   })
 
   .post("/", zValidator("json", insertOrderWithDetailsSchema), async (c) => {
-    const body = c.req.valid("json");
+    let { order, details } = c.req.valid("json");
 
-    const productIds = body.details.map((d) => d.productId);
-    const productRows = await db.query.products.findMany({
-      columns: { productId: true, unitPrice: true },
-      where: inArray(products.productId, productIds),
-      limit: productIds.length,
-    });
+    const orderId = await db.transaction(async (tx) => {
+      // 1. check validity of product ids and quantities
+      let productCheckPromises = details.map(async (detail) => {
+        const product = await tx
+          .select()
+          .from(products)
+          .where(eq(products.productId, detail.productId))
+          .get();
 
-    if (productRows.length !== productIds.length) {
-      throw new HTTPException(400, { message: "Invalid product id" });
-    }
-
-    // set unit price from product rows if not provided
-    const details = body.details.map((d) => {
-      const product = productRows.find((p) => p.productId === d.productId);
-      return {
-        ...d,
-        unitPrice: d.unitPrice ?? (product?.unitPrice as string),
-      };
-    });
-
-    const order = body.order;
-    const result = await db.transaction(async (trx) => {
-      // TODO : subtract stock from product
-      let orderResult: ResultSet;
-      try {
-        orderResult = await trx.insert(orders).values(order);
-      } catch (err) {
-        if (err instanceof LibsqlError) {
-          throw new HTTPException(400, { message: "Invalid data" });
+        if (!product) {
+          throw new HTTPException(400, {
+            message: `product with id ${detail.productId} not found`,
+          });
         }
-        throw new HTTPException(500, { message: "Internal server error" });
-      }
 
-      const orderId = Number(orderResult.lastInsertRowid);
+        if ((product?.unitsInStock || 0) < (detail.quantity || 1)) {
+          throw new HTTPException(400, {
+            message: `insufficient stock for product ${product.productName} with id ${product.productId}`,
+          });
+        }
+      });
 
-      await trx
-        .insert(orderDetails)
-        .values(details.map((d) => ({ ...d, orderId })));
+      await Promise.all(productCheckPromises);
 
-      return orderResult;
+      // 2. create the order
+      const { lastInsertRowid } = await tx.insert(orders).values(order);
+
+      // 3. Create order details and update stock
+      await tx.insert(orderDetails).values(
+        details.map((detail) => ({
+          ...detail,
+          orderId: Number(lastInsertRowid),
+        }))
+      );
+
+      const updateProductsPromises = details.map(async (detail) =>
+        tx
+          .update(products)
+          .set({
+            unitsInStock: sql`${products.unitsInStock} - ${detail.quantity}`,
+          })
+          .where(eq(products.productId, detail.productId))
+      );
+
+      await Promise.all(updateProductsPromises);
+
+      return Number(lastInsertRowid);
     });
 
-    return c.json({ orderId: Number(result.lastInsertRowid) });
+    return c.json({ orderId: orderId });
   })
 
   .get("/:id", zValidator("param", idParamSchema), async (c) => {
