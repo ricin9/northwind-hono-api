@@ -10,7 +10,7 @@ import {
   makePartialMinimumOneProperty,
 } from "../util/validation";
 import { z } from "zod";
-import { insertOrderDetailsSchema } from "./orderDetails";
+import { insertOrderDetailsSchema, ordersDetailsGroup } from "./orderDetails";
 
 const insertOrderSchema = createInsertSchema(orders).omit({
   orderId: true,
@@ -24,7 +24,6 @@ const insertOrderWithDetailsSchema = z.object({
 const patchOrderSchema = makePartialMinimumOneProperty(insertOrderSchema);
 
 export const ordersGroup = new Hono()
-
   .get("/", async (c) => {
     const rows = await db.select().from(orders);
     return c.json(rows);
@@ -136,4 +135,6 @@ export const ordersGroup = new Hono()
 
       return c.json(patchedOrder);
     }
-  );
+  )
+
+  .route("/", ordersDetailsGroup);

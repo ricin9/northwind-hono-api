@@ -7,7 +7,6 @@ import {
   shippersGroup,
   suppliersGroup,
 } from "./routes";
-import { hc } from "hono/client";
 
 const app = new Hono();
 
