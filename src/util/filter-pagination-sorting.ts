@@ -19,6 +19,8 @@ import {
 import { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
 import { z } from "zod";
 import { db } from "../db";
+import { createMiddleware } from "hono/factory";
+import QueryString, { parse } from "qs";
 
 function getColumnDataType<T extends SQLiteTableWithColumns<any>>(
   table: T,
@@ -35,6 +37,21 @@ function castStringAs(dataType: "string" | "number", value: string) {
   }
   return value;
 }
+
+export const filterSortingPaginationValidationMiddleware = (
+  table: SQLiteTableWithColumns<any>
+) =>
+  createMiddleware(async (c, next) => {
+    const queryString = new URL(c.req.url).search.slice(1); // url.search included leadin '?'
+    const parsedQueryParams = QueryString.parse(queryString, { depth: 2 });
+
+    const schema = generateFPSSchemaForTable(table);
+    // TODO do try catch and return nice error msg or implement Hono().onError
+    const data = schema.parse(parsedQueryParams);
+
+    c.set("fpsInput", data);
+    await next();
+  });
 
 const filterOperatorsSchema = z.object({
   // should be refined to only allow valid combinations of operators for same column
@@ -66,7 +83,8 @@ export function generateFPSSchemaForTable<
           field: columnsListEnum,
           order: z.enum(["asc", "desc"]).default("asc"),
         })
-        .array(),
+        .array()
+        .default([]),
       filter: z.record(columnsListEnum, filterOperatorsSchema),
     })
     .superRefine((data, ctx) => {

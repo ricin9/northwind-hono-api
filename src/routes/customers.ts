@@ -10,16 +10,38 @@ import {
   makePartialMinimumOneProperty,
 } from "../util/validation";
 import { z } from "zod";
+import { validator } from "hono/validator";
+import {
+  FilterPaginationSortingSchema,
+  filterSortingPaginationValidationMiddleware,
+  generateQuery,
+} from "../util/filter-pagination-sorting";
 
 const insertCustomerSchema = createInsertSchema(customers);
 const patchCustomerSchema = makePartialMinimumOneProperty(
   insertCustomerSchema.omit({ customerId: true })
 );
 
-export const customersGroup = new Hono()
+type Variables = {
+  fpsInput?: FilterPaginationSortingSchema<typeof customers>;
+};
+export const customersGroup = new Hono<{ Variables: Variables }>()
 
   .get(
     "/",
+    filterSortingPaginationValidationMiddleware(customers),
+    async (c) => {
+      const filteringInput = c.get("fpsInput")!;
+
+      // try catch error handling n stuff
+      const rows = await generateQuery(customers, filteringInput);
+
+      return c.json(rows);
+    }
+  )
+
+  .get(
+    "/search",
     zValidator("query", z.object({ query: z.string() }).partial()),
     async (c) => {
       const { query } = c.req.valid("query");
