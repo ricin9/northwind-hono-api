@@ -1,29 +1,33 @@
 import {
+  and,
   asc,
   desc,
   eq,
   getTableColumns,
   gt,
   gte,
+  inArray,
+  isNotNull,
+  isNull,
   like,
-  and,
   lt,
   lte,
   ne,
-  SQL,
-  inArray,
   notInArray,
-  isNull,
-  isNotNull,
+  sql,
+  SQL,
 } from "drizzle-orm";
 import { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
+import { createMiddleware } from "hono/factory";
+import QueryString from "qs";
 import { z } from "zod";
 import { db } from "../db";
-import { createMiddleware } from "hono/factory";
-import QueryString, { parse } from "qs";
+import { customers } from "db/schema";
 
-function getColumnDataType<T extends SQLiteTableWithColumns<any>>(
-  table: T,
+type Table = SQLiteTableWithColumns<any>;
+
+function getColumnDataType(
+  table: Table,
   columnName: string
 ): "string" | "number" {
   return getTableColumns(table)[columnName].dataType;
@@ -38,9 +42,7 @@ function castStringAs(dataType: "string" | "number", value: string) {
   return value;
 }
 
-export const filterSortingPaginationValidationMiddleware = (
-  table: SQLiteTableWithColumns<any>
-) =>
+export const advancedQueryValidationMiddleware = (table: Table) =>
   createMiddleware(async (c, next) => {
     const queryString = new URL(c.req.url).search.slice(1); // url.search included leadin '?'
     const parsedQueryParams = QueryString.parse(queryString, { depth: 2 });
@@ -67,9 +69,7 @@ const filterOperatorsSchema = z.object({
   is: z.enum(["null", "notnull"]).optional(),
 });
 
-export function generateFPSSchemaForTable<
-  T extends SQLiteTableWithColumns<any>
->(table: T) {
+export function generateFPSSchemaForTable(table: Table) {
   const columns = getTableColumns(table);
   const columnsList = Object.keys(columns) as [string, ...string[]];
   const columnsListEnum = z.enum(columnsList);
@@ -85,7 +85,7 @@ export function generateFPSSchemaForTable<
         })
         .array()
         .default([]),
-      filter: z.record(columnsListEnum, filterOperatorsSchema),
+      filter: z.record(columnsListEnum, filterOperatorsSchema).optional(),
     })
     .superRefine((data, ctx) => {
       for (const key in data.filter) {
@@ -107,31 +107,47 @@ export function generateFPSSchemaForTable<
     });
 }
 
-export type FilterPaginationSortingSchema<
-  T extends SQLiteTableWithColumns<any>
-> = z.infer<ReturnType<typeof generateFPSSchemaForTable<T>>>;
+export type AdvancedQuerySchema = z.infer<
+  ReturnType<typeof generateFPSSchemaForTable>
+>;
 
-export async function generateQuery<T extends SQLiteTableWithColumns<any>>(
+type TableColumns<T extends Table> = keyof ReturnType<
+  typeof getTableColumns<T>
+>;
+
+const convertStringArrayToObject = (arr: string[], val: any) =>
+  Object.fromEntries(arr.map((key) => [key, val]));
+
+export async function advancedQuery<
+  T extends Table,
+  U extends T["_"]["columns"] | Omit<T["_"]["columns"], keyof T["_"]["columns"]>
+>(
   table: T,
-  fps: FilterPaginationSortingSchema<T>
+  fps: AdvancedQuerySchema,
+  allowedColumns?: U // hide sensitive info based on user role?
 ) {
-  let query = db
-    .select()
-    .from(table)
+  let dataQuery = (
+    allowedColumns
+      ? db.select({ ...allowedColumns }).from(table)
+      : db.select().from(table)
+  )
     .$dynamic()
     .limit(fps.pageSize)
     .offset((fps.page - 1) * fps.pageSize);
 
+  let countQuery = db
+    .select({ totalCount: sql`count(1)` })
+    .from(table)
+    .$dynamic();
+
   let sortsSQL: SQL[] = [];
+  const filtersSQL: SQL[] = [];
 
   for (const sort of fps.sort) {
     sortsSQL.push(
       sort.order === "asc" ? asc(table[sort.field]) : desc(table[sort.field])
     );
   }
-  query.orderBy(...sortsSQL);
-
-  const filtersSQL: SQL[] = [];
 
   for (const filterField in fps.filter) {
     const dataType = getColumnDataType(table, filterField);
@@ -222,9 +238,12 @@ export async function generateQuery<T extends SQLiteTableWithColumns<any>>(
       );
     }
   }
+  dataQuery = dataQuery.orderBy(...sortsSQL);
+  dataQuery = dataQuery.where(and(...filtersSQL));
 
-  query = query.where(and(...filtersSQL));
-  console.log(query.toSQL());
+  countQuery = countQuery.where(and(...filtersSQL));
 
-  return await query.all();
+  const [data, count] = await Promise.all([dataQuery.all(), countQuery.all()]);
+
+  return { data, totalCount: (count[0]?.totalCount as number) || 0 };
 }

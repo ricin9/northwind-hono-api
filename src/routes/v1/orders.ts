@@ -1,16 +1,20 @@
-import { Hono } from "hono";
-import { db } from "../db";
-import { orderDetails, orders as orders, products } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
-import { createInsertSchema } from "drizzle-zod";
 import { eq, sql } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import {
-  idParamSchema,
-  makePartialMinimumOneProperty,
-} from "../util/validation";
 import { z } from "zod";
 import { insertOrderDetailsSchema, ordersDetailsGroup } from "./orderDetails";
+
+import { db } from "db";
+import { orderDetails, orders, products } from "db/schema";
+import {
+  advancedQuery,
+  advancedQueryValidationMiddleware,
+} from "util/filter-pagination-sorting";
+import { generatePaginationMetadata } from "util/paginationMetadata";
+import { idParamSchema, makePartialMinimumOneProperty } from "util/validation";
+import { AdvancedSchemaVariables } from "../../util/types";
 
 const insertOrderSchema = createInsertSchema(orders).omit({
   orderId: true,
@@ -23,11 +27,21 @@ const insertOrderWithDetailsSchema = z.object({
 
 const patchOrderSchema = makePartialMinimumOneProperty(insertOrderSchema);
 
-export const ordersGroup = new Hono()
-  .get("/", async (c) => {
-    const rows = await db.select().from(orders);
-    return c.json(rows);
-  })
+export const ordersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
+  .get(
+    "/",
+    advancedQueryValidationMiddleware(orders),
+
+    async (c) => {
+      const filteringInput = c.get("fpsInput")!;
+
+      const { data, totalCount } = await advancedQuery(orders, filteringInput);
+
+      const metadata = generatePaginationMetadata(c, totalCount);
+
+      return c.json({ metadata, data });
+    }
+  )
 
   .post("/", zValidator("json", insertOrderWithDetailsSchema), async (c) => {
     let { order, details } = c.req.valid("json");

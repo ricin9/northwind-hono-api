@@ -1,29 +1,43 @@
-import { Hono } from "hono";
-import { db } from "../db";
-import { employees } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
+import { eq, getTableColumns } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
-import { eq, sql } from "drizzle-orm";
+import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { idParamSchema, makePartialMinimumOneProperty } from "util/validation";
+
+import { db } from "db";
+import { employees } from "db/schema";
 import {
-  idParamSchema,
-  makePartialMinimumOneProperty,
-} from "../util/validation";
-import { z } from "zod";
+  advancedQuery,
+  advancedQueryValidationMiddleware,
+} from "util/filter-pagination-sorting";
+import { generatePaginationMetadata } from "util/paginationMetadata";
+import { AdvancedSchemaVariables } from "../../util/types";
 
 const insertEmployeeSchema = createInsertSchema(employees).omit({
   employeeId: true,
 });
 const patchEmployeeSchema = makePartialMinimumOneProperty(insertEmployeeSchema);
 
-export const employeesGroup = new Hono()
+export const employeesGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
+  .get(
+    "/",
+    advancedQueryValidationMiddleware(employees),
 
-  .get("/", async (c) => {
-    const rows = await db.query.employees.findMany({
-      columns: { photo: false, photoPath: false },
-    });
-    return c.json(rows);
-  })
+    async (c) => {
+      const filteringInput = c.get("fpsInput")!;
+      // const { photo, ...allowedColumns } = getTableColumns(employees);
+
+      const { data, totalCount } = await advancedQuery(
+        employees,
+        filteringInput
+      );
+
+      const metadata = generatePaginationMetadata(c, totalCount);
+
+      return c.json({ metadata, data });
+    }
+  )
 
   .post("/", zValidator("json", insertEmployeeSchema), async (c) => {
     const employee = c.req.valid("json");

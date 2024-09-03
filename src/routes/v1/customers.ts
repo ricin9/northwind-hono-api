@@ -1,42 +1,45 @@
-import { Hono } from "hono";
-import { db } from "../db";
-import { customers as customers } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
-import { createInsertSchema } from "drizzle-zod";
+import { db } from "db";
+import { customers } from "db/schema";
 import { eq, sql } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+
+import {
+  advancedQuery,
+  advancedQueryValidationMiddleware,
+} from "util/filter-pagination-sorting";
+import { generatePaginationMetadata } from "util/paginationMetadata";
 import {
   idStringParamSchema,
   makePartialMinimumOneProperty,
-} from "../util/validation";
+} from "util/validation";
 import { z } from "zod";
-import { validator } from "hono/validator";
-import {
-  FilterPaginationSortingSchema,
-  filterSortingPaginationValidationMiddleware,
-  generateQuery,
-} from "../util/filter-pagination-sorting";
+import { AdvancedSchemaVariables } from "../../util/types";
 
 const insertCustomerSchema = createInsertSchema(customers);
 const patchCustomerSchema = makePartialMinimumOneProperty(
   insertCustomerSchema.omit({ customerId: true })
 );
 
-type Variables = {
-  fpsInput?: FilterPaginationSortingSchema<typeof customers>;
-};
-export const customersGroup = new Hono<{ Variables: Variables }>()
+export const customersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
 
   .get(
     "/",
-    filterSortingPaginationValidationMiddleware(customers),
+    advancedQueryValidationMiddleware(customers),
+
     async (c) => {
       const filteringInput = c.get("fpsInput")!;
 
-      // try catch error handling n stuff
-      const rows = await generateQuery(customers, filteringInput);
+      const { data, totalCount } = await advancedQuery(
+        customers,
+        filteringInput
+      );
 
-      return c.json(rows);
+      const metadata = generatePaginationMetadata(c, totalCount);
+
+      return c.json({ metadata, data });
     }
   )
 

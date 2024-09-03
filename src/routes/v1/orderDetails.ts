@@ -1,11 +1,12 @@
-import { Hono } from "hono";
-import { db } from "../db";
-import { orderDetails, orders as orders, products } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
+import { and, eq, sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
+
+import { db } from "db";
+import { orderDetails, orders, products } from "db/schema";
 
 export const insertOrderDetailSchema = createInsertSchema(orderDetails, {
   unitPrice: z // numeric string

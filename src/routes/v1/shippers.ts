@@ -1,26 +1,42 @@
-import { Hono } from "hono";
-import { db } from "../db";
-import { shippers as shippers } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
-import { createInsertSchema } from "drizzle-zod";
 import { eq } from "drizzle-orm";
+import { createInsertSchema } from "drizzle-zod";
+import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+
+import { db } from "db";
+import { shippers } from "db/schema";
 import {
-  idParamSchema,
-  makePartialMinimumOneProperty,
-} from "../util/validation";
+  advancedQuery,
+  advancedQueryValidationMiddleware,
+} from "util/filter-pagination-sorting";
+import { generatePaginationMetadata } from "util/paginationMetadata";
+import { idParamSchema, makePartialMinimumOneProperty } from "util/validation";
+import { AdvancedSchemaVariables } from "../../util/types";
 
 const insertShipperSchema = createInsertSchema(shippers).omit({
   shipperId: true,
 });
 const patchShipperSchema = makePartialMinimumOneProperty(insertShipperSchema);
 
-export const shippersGroup = new Hono()
+export const shippersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
+  .get(
+    "/",
+    advancedQueryValidationMiddleware(shippers),
 
-  .get("/", async (c) => {
-    const rows = await db.select().from(shippers);
-    return c.json(rows);
-  })
+    async (c) => {
+      const filteringInput = c.get("fpsInput")!;
+
+      const { data, totalCount } = await advancedQuery(
+        shippers,
+        filteringInput
+      );
+
+      const metadata = generatePaginationMetadata(c, totalCount);
+
+      return c.json({ metadata, data });
+    }
+  )
 
   .post("/", zValidator("json", insertShipperSchema), async (c) => {
     const shipper = c.req.valid("json");

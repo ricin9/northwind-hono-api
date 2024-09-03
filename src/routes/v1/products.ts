@@ -1,37 +1,40 @@
-import { Hono } from "hono";
-import { db } from "../db";
-import { products as products } from "../db/schema";
 import { zValidator } from "@hono/zod-validator";
+import { eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
-import { eq, ilike } from "drizzle-orm";
+import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+
+import { db } from "db";
+import { products } from "db/schema";
 import {
-  idParamSchema,
-  makePartialMinimumOneProperty,
-} from "../util/validation";
-import { z } from "zod";
+  advancedQuery,
+  advancedQueryValidationMiddleware,
+} from "util/filter-pagination-sorting";
+import { generatePaginationMetadata } from "util/paginationMetadata";
+import { idParamSchema, makePartialMinimumOneProperty } from "util/validation";
+import { AdvancedSchemaVariables } from "../../util/types";
 
 const insertProductSchema = createInsertSchema(products).omit({
   productId: true,
 });
 const patchProductSchema = makePartialMinimumOneProperty(insertProductSchema);
 
-export const productsGroup = new Hono()
-
+export const productsGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
   .get(
     "/",
-    zValidator("query", z.object({ name: z.string() }).partial()),
+    advancedQueryValidationMiddleware(products),
+
     async (c) => {
-      const { name } = c.req.valid("query");
+      const filteringInput = c.get("fpsInput")!;
 
-      const rows = name
-        ? await db
-            .select()
-            .from(products)
-            .where(ilike(products.productName, `%${name}%`))
-        : await db.select().from(products);
+      const { data, totalCount } = await advancedQuery(
+        products,
+        filteringInput
+      );
 
-      return c.json(rows);
+      const metadata = generatePaginationMetadata(c, totalCount);
+
+      return c.json({ metadata, data });
     }
   )
 
