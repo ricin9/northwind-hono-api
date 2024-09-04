@@ -1,10 +1,27 @@
 import { Context } from "hono";
 import { AdvancedSchemaVariables } from "./types";
+import { z } from "@hono/zod-openapi";
+
+export const metadataSchema = z.object({
+  page: z.number().int(),
+  pageSize: z.number().int(),
+  totalCount: z.number().int(),
+  totalPages: z.number().int(),
+  links: z.object({
+    self: z.string().url(),
+    first: z.string().url(),
+    last: z.string().url(),
+    next: z.string().url().nullable(),
+    prev: z.string().url().nullable(),
+  }),
+});
+
+type PaginationMetadata = z.infer<typeof metadataSchema>;
 
 export function generatePaginationMetadata(
   c: Context<{ Variables: AdvancedSchemaVariables }>,
   totalCount: number
-) {
+): PaginationMetadata {
   const advancedQueryInput = c.get("fpsInput");
   const page = advancedQueryInput?.page!;
   const pageSize = advancedQueryInput?.pageSize!;
