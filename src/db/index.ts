@@ -1,16 +1,19 @@
 import { Config, createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
+import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 import * as relations from "./relations";
+import { Env } from "env";
 
-const config: Config =
-  process.env.NODE_ENV === "production"
-    ? {
-        url: process.env.LIBSQL_DATABASE_URL!,
-        authToken: process.env.LIBSQL_DATABASE_AUTH_TOKEN!,
-      }
-    : { url: "file:northwind.db" };
+const tschema = { ...schema, ...relations };
 
-export const tursoClient = createClient(config);
+export type DB = LibSQLDatabase<typeof tschema>;
+export let db: DB;
 
-export const db = drizzle(tursoClient, { schema: { ...schema, ...relations } });
+export function initDb(envars: Env) {
+  const config: Config = {
+    url: envars.LIBSQL_DATABASE_URL,
+    authToken: envars.LIBSQL_DATABASE_AUTH_TOKEN,
+  };
+  const tursoClient = createClient(config);
+  db = drizzle(tursoClient, { schema: tschema });
+}

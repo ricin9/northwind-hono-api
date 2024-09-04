@@ -2,9 +2,9 @@ name = "northwind-rest-api"
 compatibility_date = "2024-08-31"
 
 # [vars]
-# MY_VAR = "my-variable"
+# my_var = "myvvar"
 
-# [[kv_namespaces]]
+# [[kv_namespaces]]MY_VAR = "my-variable"
 # binding = "MY_KV_NAMESPACE"
 # id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
