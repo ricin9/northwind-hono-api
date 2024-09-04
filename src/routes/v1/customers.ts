@@ -43,20 +43,21 @@ export const customersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
     }
   )
 
-  .get(
-    "/search",
-    zValidator("query", z.object({ query: z.string() }).partial()),
-    async (c) => {
-      const { query } = c.req.valid("query");
-      const rows = query
-        ? await db.all(sql`SELECT * FROM CustomerSearch
-          JOIN Customers USING (CustomerId)
-          WHERE CustomerSearch MATCH ${query + "*"} 
-          ORDER BY rank`)
-        : await db.select().from(customers);
-      return c.json(rows);
-    }
-  )
+  // disabled temporarily because of problem with turso and FTS5, solvable
+  // .get(
+  //   "/search",
+  //   zValidator("query", z.object({ query: z.string() }).partial()),
+  //   async (c) => {
+  //     const { query } = c.req.valid("query");
+  //     const rows = query
+  //       ? await db.all(sql`SELECT * FROM CustomerSearch
+  //         JOIN Customers USING (CustomerId)
+  //         WHERE CustomerSearch MATCH ${query + "*"}
+  //         ORDER BY rank`)
+  //       : await db.select().from(customers);
+  //     return c.json(rows);
+  //   }
+  // )
 
   .post("/", zValidator("json", insertCustomerSchema), async (c) => {
     const customer = c.req.valid("json");
@@ -66,11 +67,13 @@ export const customersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
 
   .get("/:id", zValidator("param", idStringParamSchema), async (c) => {
     const { id } = c.req.valid("param");
-    const customer = await db
-      .select()
-      .from(customers)
-      .where(eq(customers.customerId, id));
+    const customer = await db.query.customers.findFirst({
+      where: eq(customers.customerId, id),
+    });
 
+    if (!customer) {
+      throw new HTTPException(404, { message: "customer not found" });
+    }
     return c.json(customer);
   })
 
@@ -82,13 +85,11 @@ export const customersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
       const { id } = c.req.valid("param");
       const body = c.req.valid("json");
 
-      const result = await db
-        .select({ customerId: customers.customerId })
-        .from(customers)
-        .where(eq(customers.customerId, id))
-        .limit(1);
+      const customer = await db.query.customers.findFirst({
+        where: eq(customers.customerId, id),
+      });
 
-      if (result.length === 0) {
+      if (!customer) {
         throw new HTTPException(404, { message: "customer not found" });
       }
 

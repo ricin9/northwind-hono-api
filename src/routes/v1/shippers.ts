@@ -46,10 +46,13 @@ export const shippersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
 
   .get("/:id", zValidator("param", idParamSchema), async (c) => {
     const { id } = c.req.valid("param");
-    const shipper = await db
-      .select()
-      .from(shippers)
-      .where(eq(shippers.shipperId, id));
+    const shipper = await db.query.shippers.findFirst({
+      where: eq(shippers.shipperId, id),
+    });
+
+    if (!shipper) {
+      throw new HTTPException(404, { message: "shipper not found" });
+    }
 
     return c.json(shipper);
   })

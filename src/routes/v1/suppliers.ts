@@ -46,10 +46,13 @@ export const suppliersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
 
   .get("/:id", zValidator("param", idParamSchema), async (c) => {
     const { id } = c.req.valid("param");
-    const supplier = await db
-      .select()
-      .from(suppliers)
-      .where(eq(suppliers.supplierId, id));
+    const supplier = await db.query.suppliers.findFirst({
+      where: eq(suppliers.supplierId, id),
+    });
+
+    if (!supplier) {
+      throw new HTTPException(404, { message: "supplier not found" });
+    }
 
     return c.json(supplier);
   })

@@ -120,6 +120,9 @@ export const ordersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
       },
     });
 
+    if (!order) {
+      throw new HTTPException(404, { message: "order not found" });
+    }
     return c.json(order);
   })
 

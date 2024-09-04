@@ -56,7 +56,9 @@ export const productsGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
       },
     });
 
-    console.log({ product });
+    if (!product) {
+      throw new HTTPException(404, { message: "product not found" });
+    }
 
     return c.json(product);
   })

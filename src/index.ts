@@ -1,10 +1,10 @@
 import { Hono } from "hono";
-
-import { logger } from "hono/logger";
 import { cors } from "hono/cors";
+import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
-import { errorHandler } from "./util/global-error-handler";
+
 import { v1 } from "./routes/v1";
+import { errorHandler } from "./util/global-error-handler";
 
 const app = new Hono();
 
@@ -13,11 +13,11 @@ app.use(logger());
 app.use(cors());
 app.use(secureHeaders());
 
-/* global error handling */
+/* error handling */
 app.onError(errorHandler);
 
 app.get("/", (c) => {
-  return c.text("Hello sup!");
+  return c.text("hello");
 });
 
 /* routes */

@@ -51,6 +51,9 @@ export const employeesGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
       where: eq(employees.employeeId, id),
     });
 
+    if (!employee) {
+      throw new HTTPException(404, { message: "employee not found" });
+    }
     return c.json(employee);
   })
 
@@ -62,16 +65,13 @@ export const employeesGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
       const { id } = c.req.valid("param");
       const body = c.req.valid("json");
 
-      const result = await db
-        .select({ employeeId: employees.employeeId })
-        .from(employees)
-        .where(eq(employees.employeeId, id))
-        .limit(1);
+      const employee = await db.query.employees.findFirst({
+        where: eq(employees.employeeId, id),
+      });
 
-      if (result.length === 0) {
+      if (!employee) {
         throw new HTTPException(404, { message: "employee not found" });
       }
-
       const patchedEmployee = await db
         .update(employees)
         .set(body)
