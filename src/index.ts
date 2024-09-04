@@ -20,18 +20,6 @@ app.use(initDbMiddleware); // cloudflare worker hack
 /* error handling */
 app.onError(errorHandler);
 
-app.get("/", (c) => {
-  const baseUrl = c.req.url;
-  return c.json({
-    customers: baseUrl + "v1/customers",
-    employees: baseUrl + "v1/employees",
-    orders: baseUrl + "v1/orders",
-    products: baseUrl + "v1/products",
-    suppliers: baseUrl + "v1/suppliers",
-    shippers: baseUrl + "v1/shippers",
-  });
-});
-
 /* openapi */
 app.doc("/doc", {
   openapi: "3.0.0",
@@ -42,7 +30,7 @@ app.doc("/doc", {
 });
 
 app.get(
-  "/reference",
+  "/",
   apiReference({
     spec: { url: "/doc" },
   })
