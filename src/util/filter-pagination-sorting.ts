@@ -115,9 +115,6 @@ type TableColumns<T extends Table> = keyof ReturnType<
   typeof getTableColumns<T>
 >;
 
-const convertStringArrayToObject = (arr: string[], val: any) =>
-  Object.fromEntries(arr.map((key) => [key, val]));
-
 export async function advancedQuery<
   T extends Table,
   U extends T["_"]["columns"] | Omit<T["_"]["columns"], keyof T["_"]["columns"]>

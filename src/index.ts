@@ -8,6 +8,7 @@ import { v1 } from "./routes/v1";
 import { errorHandler } from "./util/global-error-handler";
 import { OpenAPIHono } from "@hono/zod-openapi";
 import { apiReference } from "@scalar/hono-api-reference";
+import { openApiInfo } from "openapi-info";
 
 const app = new OpenAPIHono<{ Bindings: Env }>();
 
@@ -21,13 +22,7 @@ app.use(initDbMiddleware); // cloudflare worker hack
 app.onError(errorHandler);
 
 /* openapi */
-app.doc("/doc", {
-  openapi: "3.0.0",
-  info: {
-    title: "Northwind API",
-    version: "1.0.0",
-  },
-});
+app.doc("/doc", openApiInfo);
 
 app.get(
   "/",
@@ -39,5 +34,8 @@ app.get(
 /* routes */
 const routes = app.route("/v1", v1);
 
+/* for hono RPC */
 export type AppType = typeof routes;
+
+/* for cloudflare workers */
 export default app;

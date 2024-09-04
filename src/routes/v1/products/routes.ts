@@ -1,5 +1,5 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { shippers } from "db/schema";
+import { products } from "db/schema";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import {
   advancedQueryValidationMiddleware,
@@ -9,10 +9,10 @@ import { resourceListSchema } from "util/resource-list-schema";
 import { idParamSchema, insureOneProperty } from "util/validation";
 import { ZodBadRequestOpenApi } from "util/zodhttperrorschema";
 
-const table = shippers;
+const table = products;
 
 const baseInsertSchema = createInsertSchema(table).omit({
-  shipperId: true,
+  productId: true,
 });
 
 export const insertSchema = insureOneProperty(baseInsertSchema);
@@ -22,9 +22,9 @@ export const selectSchema = createSelectSchema(table).partial();
 export const list = createRoute({
   method: "get",
   path: "/",
-  tags: ["Shippers"],
-  summary: "List shippers",
-  description: "Get a list of shippers with filtering, pagination, and sorting",
+  tags: ["Products"],
+  summary: "List products",
+  description: "Get a list of products with filtering, pagination, and sorting",
   middleware: [advancedQueryValidationMiddleware(table)],
   request: {
     query: generateFPSSchemaForTable(table),
@@ -45,8 +45,8 @@ export const list = createRoute({
 export const create = createRoute({
   method: "post",
   path: "/",
-  tags: ["Shippers"],
-  summary: "Create a shipper",
+  tags: ["Products"],
+  summary: "Create a product",
   request: {
     body: {
       content: {
@@ -62,7 +62,7 @@ export const create = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            shipperId: z.number(),
+            productId: z.number(),
           }),
         },
       },
@@ -74,8 +74,8 @@ export const create = createRoute({
 export const get = createRoute({
   method: "get",
   path: "/{id}",
-  tags: ["Shippers"],
-  summary: "Get a shipper",
+  tags: ["Products"],
+  summary: "Get a product",
   request: {
     params: idParamSchema,
   },
@@ -89,9 +89,8 @@ export const get = createRoute({
       },
     },
     400: ZodBadRequestOpenApi,
-
     404: {
-      description: "Shipper not found",
+      description: "Product not found",
     },
   },
 });
@@ -99,9 +98,8 @@ export const get = createRoute({
 export const update = createRoute({
   method: "patch",
   path: "/{id}",
-  tags: ["Shippers"],
-  summary: "Update a shipper",
-
+  tags: ["Products"],
+  summary: "Update a product",
   request: {
     params: idParamSchema,
     body: {
@@ -123,7 +121,7 @@ export const update = createRoute({
     },
     400: ZodBadRequestOpenApi,
     404: {
-      description: "Shipper not found",
+      description: "Product not found",
     },
   },
 });

@@ -1,5 +1,5 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { shippers } from "db/schema";
+import { orders } from "db/schema";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import {
   advancedQueryValidationMiddleware,
@@ -8,23 +8,43 @@ import {
 import { resourceListSchema } from "util/resource-list-schema";
 import { idParamSchema, insureOneProperty } from "util/validation";
 import { ZodBadRequestOpenApi } from "util/zodhttperrorschema";
+import { insertOrderDetailsSchema } from "../orderDetails";
+import { selectSchema as customerSchema } from "../customers/routes";
+import { selectSchema as employeeSchema } from "../employees/routes";
+import { selectSchema as shipperSchema } from "../shippers/routes";
+import { selectSchema as orderDetailSchema } from "./orderDetails/routes";
 
-const table = shippers;
+const table = orders;
 
 const baseInsertSchema = createInsertSchema(table).omit({
-  shipperId: true,
+  orderId: true,
 });
 
 export const insertSchema = insureOneProperty(baseInsertSchema);
 export const updateSchema = insureOneProperty(baseInsertSchema.partial());
 export const selectSchema = createSelectSchema(table).partial();
 
+export const detailedSelectSchema = selectSchema.extend({
+  customer: customerSchema.pick({ customerId: true, companyName: true }),
+  employee: employeeSchema.pick({
+    employeeId: true,
+    lastName: true,
+    firstName: true,
+  }),
+  orderDetails: z.array(orderDetailSchema),
+});
+
+export const insertOrderWithDetailsSchema = z.object({
+  order: insertSchema,
+  details: insertOrderDetailsSchema,
+});
+
 export const list = createRoute({
   method: "get",
   path: "/",
-  tags: ["Shippers"],
-  summary: "List shippers",
-  description: "Get a list of shippers with filtering, pagination, and sorting",
+  tags: ["Orders"],
+  summary: "List orders",
+  description: "Get a list of orders with filtering, pagination, and sorting",
   middleware: [advancedQueryValidationMiddleware(table)],
   request: {
     query: generateFPSSchemaForTable(table),
@@ -45,13 +65,13 @@ export const list = createRoute({
 export const create = createRoute({
   method: "post",
   path: "/",
-  tags: ["Shippers"],
-  summary: "Create a shipper",
+  tags: ["Orders"],
+  summary: "Create an order",
   request: {
     body: {
       content: {
         "application/json": {
-          schema: insertSchema,
+          schema: insertOrderWithDetailsSchema,
         },
       },
     },
@@ -62,7 +82,7 @@ export const create = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            shipperId: z.number(),
+            orderId: z.number(),
           }),
         },
       },
@@ -74,8 +94,8 @@ export const create = createRoute({
 export const get = createRoute({
   method: "get",
   path: "/{id}",
-  tags: ["Shippers"],
-  summary: "Get a shipper",
+  tags: ["Orders"],
+  summary: "Get an order",
   request: {
     params: idParamSchema,
   },
@@ -84,14 +104,13 @@ export const get = createRoute({
       description: "Successful response",
       content: {
         "application/json": {
-          schema: selectSchema,
+          schema: detailedSelectSchema,
         },
       },
     },
     400: ZodBadRequestOpenApi,
-
     404: {
-      description: "Shipper not found",
+      description: "Order not found",
     },
   },
 });
@@ -99,9 +118,8 @@ export const get = createRoute({
 export const update = createRoute({
   method: "patch",
   path: "/{id}",
-  tags: ["Shippers"],
-  summary: "Update a shipper",
-
+  tags: ["Orders"],
+  summary: "Update an order",
   request: {
     params: idParamSchema,
     body: {
@@ -123,7 +141,7 @@ export const update = createRoute({
     },
     400: ZodBadRequestOpenApi,
     404: {
-      description: "Shipper not found",
+      description: "Order not found",
     },
   },
 });

@@ -1,49 +1,28 @@
-import { zValidator } from "@hono/zod-validator";
+import { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
-import { createInsertSchema } from "drizzle-zod";
-import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { z } from "zod";
-import { insertOrderDetailsSchema, ordersDetailsGroup } from "./orderDetails";
 
 import { db } from "db";
-import { orderDetails, orders, products } from "db/schema";
-import {
-  advancedQuery,
-  advancedQueryValidationMiddleware,
-} from "util/filter-pagination-sorting";
+import { orders, orderDetails, products } from "db/schema";
+import { advancedQuery } from "util/filter-pagination-sorting";
 import { generatePaginationMetadata } from "util/paginationMetadata";
-import { idParamSchema, makePartialMinimumOneProperty } from "util/validation";
-import { AdvancedSchemaVariables } from "../../util/types";
+import { AdvancedSchemaVariables } from "../../../util/types";
+import { create, get, list, update } from "./routes";
+import { orderDetailsGroup } from "./orderDetails/orderDetails";
 
-const insertOrderSchema = createInsertSchema(orders).omit({
-  orderId: true,
-});
+export const ordersGroup = new OpenAPIHono<{
+  Variables: AdvancedSchemaVariables;
+}>()
+  .openapi(list, async (c) => {
+    const filteringInput = c.get("fpsInput")!;
 
-const insertOrderWithDetailsSchema = z.object({
-  order: insertOrderSchema,
-  details: insertOrderDetailsSchema,
-});
+    const { data, totalCount } = await advancedQuery(orders, filteringInput);
+    const metadata = generatePaginationMetadata(c, totalCount);
 
-const patchOrderSchema = makePartialMinimumOneProperty(insertOrderSchema);
+    return c.json({ metadata, data });
+  })
 
-export const ordersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
-  .get(
-    "/",
-    advancedQueryValidationMiddleware(orders),
-
-    async (c) => {
-      const filteringInput = c.get("fpsInput")!;
-
-      const { data, totalCount } = await advancedQuery(orders, filteringInput);
-
-      const metadata = generatePaginationMetadata(c, totalCount);
-
-      return c.json({ metadata, data });
-    }
-  )
-
-  .post("/", zValidator("json", insertOrderWithDetailsSchema), async (c) => {
+  .openapi(create, async (c) => {
     let { order, details } = c.req.valid("json");
 
     const orderId = await db.transaction(async (tx) => {
@@ -98,7 +77,7 @@ export const ordersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
     return c.json({ orderId: orderId });
   })
 
-  .get("/:id", zValidator("param", idParamSchema), async (c) => {
+  .openapi(get, async (c) => {
     const { id } = c.req.valid("param");
     const order = await db.query.orders.findFirst({
       where: eq(orders.orderId, id),
@@ -123,35 +102,31 @@ export const ordersGroup = new Hono<{ Variables: AdvancedSchemaVariables }>()
     if (!order) {
       throw new HTTPException(404, { message: "order not found" });
     }
+
     return c.json(order);
   })
 
-  .patch(
-    "/:id",
-    zValidator("param", idParamSchema),
-    zValidator("json", patchOrderSchema),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      const body = c.req.valid("json");
+  .openapi(update, async (c) => {
+    const { id } = c.req.valid("param");
+    const body = c.req.valid("json");
 
-      const result = await db
-        .select({ orderId: orders.orderId })
-        .from(orders)
-        .where(eq(orders.orderId, id))
-        .limit(1);
+    const result = await db
+      .select({ orderId: orders.orderId })
+      .from(orders)
+      .where(eq(orders.orderId, id))
+      .limit(1);
 
-      if (result.length === 0) {
-        throw new HTTPException(404, { message: "order not found" });
-      }
-
-      const patchedOrder = await db
-        .update(orders)
-        .set(body)
-        .where(eq(orders.orderId, id))
-        .returning();
-
-      return c.json(patchedOrder);
+    if (result.length === 0) {
+      throw new HTTPException(404, { message: "order not found" });
     }
-  )
 
-  .route("/", ordersDetailsGroup);
+    const patchedOrder = await db
+      .update(orders)
+      .set(body)
+      .where(eq(orders.orderId, id))
+      .returning();
+
+    return c.json(patchedOrder);
+  })
+
+  .route("/", orderDetailsGroup);
