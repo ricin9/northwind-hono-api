@@ -1,11 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { customers } from "db/schema";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import qs from "qs";
-import {
-  advancedQueryValidationMiddleware,
-  generateFPSSchemaForTable,
-} from "util/filter-pagination-sorting";
+import { generateFPSSchemaForTable } from "util/filter-pagination-sorting";
 import { resourceListSchema } from "util/resource-list-schema";
 import { idStringParamSchema, insureOneProperty } from "util/validation";
 import { ZodBadRequestOpenApi } from "util/zodhttperrorschema";
