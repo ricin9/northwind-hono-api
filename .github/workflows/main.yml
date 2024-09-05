@@ -14,6 +14,6 @@ jobs:
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:
+          packageManager: "pnpm"
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          packageManager: pnpm
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
