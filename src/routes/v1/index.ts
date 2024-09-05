@@ -1,11 +1,11 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
 
-import { employeesGroup } from "./employees/employees";
-import { suppliersGroup } from "./suppliers/suppliers";
-import { shippersGroup } from "./shippers/shippers";
-import { productsGroup } from "./products/products";
-import { customersGroup } from "./customers/customers";
-import { ordersGroup } from "./orders/orders";
+import { employeesGroup } from "./employees/handler";
+import { suppliersGroup } from "./suppliers/handler";
+import { shippersGroup } from "./shippers/handler";
+import { productsGroup } from "./products/handler";
+import { customersGroup } from "./customers/handler";
+import { ordersGroup } from "./orders/handler";
 
 export const v1 = new OpenAPIHono()
   .route("/employees", employeesGroup)

@@ -1,58 +1,32 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { orders } from "db/schema";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { generateFPSSchemaForTable } from "util/filter-pagination-sorting";
-import { resourceListSchema } from "util/resource-list-schema";
-import { idParamSchema, insureOneProperty } from "util/validation";
-import { ZodBadRequestOpenApi } from "util/zodhttperrorschema";
-import { selectSchema as customerSchema } from "../customers/routes";
-import { selectSchema as employeeSchema } from "../employees/routes";
-import { selectSchema as shipperSchema } from "../shippers/routes";
+import { idParamSchema } from "lib/util/validation";
+import { ZodBadRequestOpenApi } from "lib/util/zodhttperrorschema";
 import {
-  insertOrderDetailsSchema,
-  selectSchema as orderDetailSchema,
-} from "./orderDetails/routes";
+  detailedOrderSchema,
+  insertDetailedOrderSchema,
+  listOrderQuerySearchSchema,
+  listOrderSchema,
+  orderSchema,
+  updateOrderSchema,
+} from "./schema";
 
-const table = orders;
-
-const baseInsertSchema = createInsertSchema(table).omit({
-  orderId: true,
-});
-
-export const insertSchema = insureOneProperty(baseInsertSchema);
-export const updateSchema = insureOneProperty(baseInsertSchema.partial());
-export const selectSchema = createSelectSchema(table).partial();
-
-export const detailedSelectSchema = selectSchema.extend({
-  customer: customerSchema.pick({ customerId: true, companyName: true }),
-  employee: employeeSchema.pick({
-    employeeId: true,
-    lastName: true,
-    firstName: true,
-  }),
-  orderDetails: z.array(orderDetailSchema),
-});
-
-export const insertOrderWithDetailsSchema = z.object({
-  order: insertSchema,
-  details: insertOrderDetailsSchema,
-});
+export const tags = ["Orders"];
 
 export const list = createRoute({
   method: "get",
   path: "/",
-  tags: ["Orders"],
+  tags,
   summary: "List orders",
   description: "Get a list of orders with filtering, pagination, and sorting",
   request: {
-    query: generateFPSSchemaForTable(table),
+    query: listOrderQuerySearchSchema,
   },
   responses: {
     200: {
       description: "Successful response",
       content: {
         "application/json": {
-          schema: resourceListSchema(table),
+          schema: listOrderSchema,
         },
       },
     },
@@ -63,13 +37,13 @@ export const list = createRoute({
 export const create = createRoute({
   method: "post",
   path: "/",
-  tags: ["Orders"],
+  tags,
   summary: "Create an order",
   request: {
     body: {
       content: {
         "application/json": {
-          schema: insertOrderWithDetailsSchema,
+          schema: insertDetailedOrderSchema,
         },
       },
     },
@@ -92,7 +66,7 @@ export const create = createRoute({
 export const get = createRoute({
   method: "get",
   path: "/{id}",
-  tags: ["Orders"],
+  tags,
   summary: "Get an order",
   request: {
     params: idParamSchema,
@@ -102,7 +76,7 @@ export const get = createRoute({
       description: "Successful response",
       content: {
         "application/json": {
-          schema: detailedSelectSchema,
+          schema: detailedOrderSchema,
         },
       },
     },
@@ -116,14 +90,14 @@ export const get = createRoute({
 export const update = createRoute({
   method: "patch",
   path: "/{id}",
-  tags: ["Orders"],
+  tags,
   summary: "Update an order",
   request: {
     params: idParamSchema,
     body: {
       content: {
         "application/json": {
-          schema: updateSchema,
+          schema: updateOrderSchema,
         },
       },
     },
@@ -133,7 +107,7 @@ export const update = createRoute({
       description: "Successful response",
       content: {
         "application/json": {
-          schema: selectSchema,
+          schema: orderSchema,
         },
       },
     },

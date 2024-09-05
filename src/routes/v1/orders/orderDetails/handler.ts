@@ -2,9 +2,9 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { and, eq, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
-import { db } from "db";
-import { orderDetails, orders, products } from "db/schema";
-import { del, get, list, put } from "./routes";
+import { db } from "lib/db";
+import { orderDetails, orders, products } from "lib/db/schema";
+import { del, get, list, put } from "./openapi.routes";
 
 export const orderDetailsGroup = new OpenAPIHono()
 

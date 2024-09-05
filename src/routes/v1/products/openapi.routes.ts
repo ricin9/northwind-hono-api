@@ -1,40 +1,32 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { employees } from "db/schema";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import { products } from "lib/db/schema";
+import { generateFPSSchemaForTable } from "lib/util/filter-pagination-sorting";
+import { resourceListSchema } from "lib/util/resource-list-schema";
+import { idParamSchema } from "lib/util/validation";
+import { ZodBadRequestOpenApi } from "lib/util/zodhttperrorschema";
 import {
-  advancedQueryValidationMiddleware,
-  generateFPSSchemaForTable,
-} from "util/filter-pagination-sorting";
-import { resourceListSchema } from "util/resource-list-schema";
-import { idParamSchema, insureOneProperty } from "util/validation";
-import { ZodBadRequestOpenApi } from "util/zodhttperrorschema";
+  insertProductSchema,
+  productSchema,
+  updateProductSchema,
+} from "./schema";
 
-const table = employees;
-
-const baseInsertSchema = createInsertSchema(table).omit({
-  employeeId: true,
-});
-
-export const insertSchema = insureOneProperty(baseInsertSchema);
-export const updateSchema = insureOneProperty(baseInsertSchema.partial());
-export const selectSchema = createSelectSchema(table).partial();
+const tags = ["Products"];
 
 export const list = createRoute({
   method: "get",
   path: "/",
-  tags: ["Employees"],
-  summary: "List employees",
-  description:
-    "Get a list of employees with filtering, pagination, and sorting",
+  tags,
+  summary: "List products",
+  description: "Get a list of products with filtering, pagination, and sorting",
   request: {
-    query: generateFPSSchemaForTable(table),
+    query: generateFPSSchemaForTable(products),
   },
   responses: {
     200: {
       description: "Successful response",
       content: {
         "application/json": {
-          schema: resourceListSchema(table),
+          schema: resourceListSchema(products),
         },
       },
     },
@@ -45,13 +37,13 @@ export const list = createRoute({
 export const create = createRoute({
   method: "post",
   path: "/",
-  tags: ["Employees"],
-  summary: "Create an employee",
+  tags,
+  summary: "Create a product",
   request: {
     body: {
       content: {
         "application/json": {
-          schema: insertSchema,
+          schema: insertProductSchema,
         },
       },
     },
@@ -62,7 +54,7 @@ export const create = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            employeeId: z.number(),
+            productId: z.number(),
           }),
         },
       },
@@ -74,8 +66,8 @@ export const create = createRoute({
 export const get = createRoute({
   method: "get",
   path: "/{id}",
-  tags: ["Employees"],
-  summary: "Get an employee",
+  tags,
+  summary: "Get a product",
   request: {
     params: idParamSchema,
   },
@@ -84,13 +76,13 @@ export const get = createRoute({
       description: "Successful response",
       content: {
         "application/json": {
-          schema: selectSchema,
+          schema: productSchema,
         },
       },
     },
     400: ZodBadRequestOpenApi,
     404: {
-      description: "Employee not found",
+      description: "Product not found",
     },
   },
 });
@@ -98,14 +90,14 @@ export const get = createRoute({
 export const update = createRoute({
   method: "patch",
   path: "/{id}",
-  tags: ["Employees"],
-  summary: "Update an employee",
+  tags,
+  summary: "Update a product",
   request: {
     params: idParamSchema,
     body: {
       content: {
         "application/json": {
-          schema: updateSchema,
+          schema: updateProductSchema,
         },
       },
     },
@@ -115,13 +107,13 @@ export const update = createRoute({
       description: "Successful response",
       content: {
         "application/json": {
-          schema: selectSchema,
+          schema: productSchema,
         },
       },
     },
     400: ZodBadRequestOpenApi,
     404: {
-      description: "Employee not found",
+      description: "Product not found",
     },
   },
 });

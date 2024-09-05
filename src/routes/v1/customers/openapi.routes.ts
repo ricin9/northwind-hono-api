@@ -1,36 +1,32 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { shippers } from "db/schema";
-import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { generateFPSSchemaForTable } from "util/filter-pagination-sorting";
-import { resourceListSchema } from "util/resource-list-schema";
-import { idParamSchema, insureOneProperty } from "util/validation";
-import { ZodBadRequestOpenApi } from "util/zodhttperrorschema";
+import { idStringParamSchema } from "lib/util/validation";
+import { ZodBadRequestOpenApi } from "lib/util/zodhttperrorschema";
+import {
+  insertCustomerSchema,
+  customerSchema,
+  updateCustomerSchema,
+  listCustomerSchema,
+  listCustomerQuerySearchSchema,
+} from "./schema";
 
-const table = shippers;
-
-const baseInsertSchema = createInsertSchema(table).omit({
-  shipperId: true,
-});
-
-export const insertSchema = insureOneProperty(baseInsertSchema);
-export const updateSchema = insureOneProperty(baseInsertSchema.partial());
-export const selectSchema = createSelectSchema(table).partial();
+const tags = ["Customers"];
 
 export const list = createRoute({
   method: "get",
   path: "/",
-  tags: ["Shippers"],
-  summary: "List shippers",
-  description: "Get a list of shippers with filtering, pagination, and sorting",
+  tags,
+  summary: "List customers",
+  description:
+    "Get a list of customers with filtering, pagination, and sorting",
   request: {
-    query: generateFPSSchemaForTable(table),
+    query: listCustomerQuerySearchSchema,
   },
   responses: {
     200: {
       description: "Successful response",
       content: {
         "application/json": {
-          schema: resourceListSchema(table),
+          schema: listCustomerSchema,
         },
       },
     },
@@ -41,13 +37,13 @@ export const list = createRoute({
 export const create = createRoute({
   method: "post",
   path: "/",
-  tags: ["Shippers"],
-  summary: "Create a shipper",
+  tags,
+  summary: "Create a customer",
   request: {
     body: {
       content: {
         "application/json": {
-          schema: insertSchema,
+          schema: insertCustomerSchema,
         },
       },
     },
@@ -58,7 +54,7 @@ export const create = createRoute({
       content: {
         "application/json": {
           schema: z.object({
-            shipperId: z.number(),
+            customerId: z.string(),
           }),
         },
       },
@@ -70,24 +66,23 @@ export const create = createRoute({
 export const get = createRoute({
   method: "get",
   path: "/{id}",
-  tags: ["Shippers"],
-  summary: "Get a shipper",
+  tags,
+  summary: "Get a customer",
   request: {
-    params: idParamSchema,
+    params: idStringParamSchema,
   },
   responses: {
     200: {
       description: "Successful response",
       content: {
         "application/json": {
-          schema: selectSchema,
+          schema: customerSchema,
         },
       },
     },
     400: ZodBadRequestOpenApi,
-
     404: {
-      description: "Shipper not found",
+      description: "Customer not found",
     },
   },
 });
@@ -95,15 +90,14 @@ export const get = createRoute({
 export const update = createRoute({
   method: "patch",
   path: "/{id}",
-  tags: ["Shippers"],
-  summary: "Update a shipper",
-
+  tags,
+  summary: "Update a customer",
   request: {
-    params: idParamSchema,
+    params: idStringParamSchema,
     body: {
       content: {
         "application/json": {
-          schema: updateSchema,
+          schema: updateCustomerSchema,
         },
       },
     },
@@ -113,13 +107,13 @@ export const update = createRoute({
       description: "Successful response",
       content: {
         "application/json": {
-          schema: selectSchema,
+          schema: customerSchema,
         },
       },
     },
     400: ZodBadRequestOpenApi,
     404: {
-      description: "Shipper not found",
+      description: "Customer not found",
     },
   },
 });
