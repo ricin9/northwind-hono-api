@@ -28,14 +28,11 @@ app.get(
   "/",
   apiReference({
     spec: { url: "/doc" },
+    pageTitle: "Northwind API Reference",
   })
 );
 
 /* routes */
-app.get("/dev", (c) => {
-  return c.text(new URLSearchParams(c.req.query()).toString());
-});
-
 const routes = app.route("/v1", v1);
 
 /* for hono RPC */
