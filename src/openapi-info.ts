@@ -54,6 +54,10 @@ Use 'page' and 'pageSize' parameters:
     
     You can combine multiple filters, sorting, and pagination in a single query.
     Example: ?page=1&pageSize=20&sort[0][field]=productName&sort[0][order]=asc&filter[categoryId][eq]=1&filter[unitPrice][gte]=10
+
+
+    ## For javascript clients
+    If your api client is written in javascript you can just use the *qs* library to stringify the filter pagination sort object and it'll just work.
       `,
     },
     {
