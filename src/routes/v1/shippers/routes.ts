@@ -1,10 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { shippers } from "db/schema";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import {
-  advancedQueryValidationMiddleware,
-  generateFPSSchemaForTable,
-} from "util/filter-pagination-sorting";
+import { generateFPSSchemaForTable } from "util/filter-pagination-sorting";
 import { resourceListSchema } from "util/resource-list-schema";
 import { idParamSchema, insureOneProperty } from "util/validation";
 import { ZodBadRequestOpenApi } from "util/zodhttperrorschema";
@@ -25,7 +22,6 @@ export const list = createRoute({
   tags: ["Shippers"],
   summary: "List shippers",
   description: "Get a list of shippers with filtering, pagination, and sorting",
-  middleware: [advancedQueryValidationMiddleware(table)],
   request: {
     query: generateFPSSchemaForTable(table),
   },

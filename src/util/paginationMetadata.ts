@@ -1,5 +1,4 @@
 import { Context } from "hono";
-import { AdvancedSchemaVariables } from "./types";
 import { z } from "@hono/zod-openapi";
 
 export const metadataSchema = z.object({
@@ -19,15 +18,11 @@ export const metadataSchema = z.object({
 type PaginationMetadata = z.infer<typeof metadataSchema>;
 
 export function generatePaginationMetadata(
-  c: Context<{ Variables: AdvancedSchemaVariables }>,
+  c: Context<any, any, { out: { query: { page: number; pageSize: number } } }>,
   totalCount: number
 ): PaginationMetadata {
-  const advancedQueryInput = c.get("fpsInput");
-  const page = advancedQueryInput?.page!;
-  const pageSize = advancedQueryInput?.pageSize!;
-  const totalPages = Math.ceil(
-    totalCount / Number(advancedQueryInput?.pageSize)
-  );
+  const { page, pageSize } = c.req.valid("query");
+  const totalPages = Math.ceil(totalCount / Number(pageSize));
 
   const selfUrl = new URL(c.req.url).href;
 
@@ -52,8 +47,8 @@ export function generatePaginationMetadata(
       self: selfUrl,
       first: firstPageUrl.href,
       last: lastPageUrl.href,
-      next: page === totalPages ? null : nextPageUrl.href,
-      prev: page === 1 ? null : prevPageUrl.href,
+      next: page >= totalPages ? null : nextPageUrl.href,
+      prev: page === 1 || page > totalPages + 1 ? null : prevPageUrl.href,
     },
   };
 }

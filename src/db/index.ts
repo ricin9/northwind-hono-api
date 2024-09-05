@@ -3,6 +3,8 @@ import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 import * as relations from "./relations";
 import { Env } from "env";
+import { env } from "hono/adapter";
+import { createMiddleware } from "hono/factory";
 
 const tschema = { ...schema, ...relations };
 
@@ -17,3 +19,7 @@ export function initDb(envars: Env) {
   const tursoClient = createClient(config);
   db = drizzle(tursoClient, { schema: tschema });
 }
+export const initDbMiddleware = createMiddleware(async (c, next) => {
+  initDb(env<Env, any>(c));
+  await next();
+});

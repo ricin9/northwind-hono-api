@@ -7,25 +7,21 @@ import { db } from "db";
 import { shippers } from "db/schema";
 import { advancedQuery } from "util/filter-pagination-sorting";
 import { generatePaginationMetadata } from "util/paginationMetadata";
-import { AdvancedSchemaVariables } from "../../../util/types";
 import { create, get, list, update } from "./routes";
 
-export const shippersGroup = new OpenAPIHono<{
-  Variables: AdvancedSchemaVariables;
-}>()
+export const shippersGroup = new OpenAPIHono()
   .openapi(list, async (c) => {
-    const filteringInput = c.get("fpsInput")!;
-
+    const filteringInput = c.req.valid("query");
     const { data, totalCount } = await advancedQuery(shippers, filteringInput);
     const metadata = generatePaginationMetadata(c, totalCount);
 
-    return c.json({ metadata, data });
+    return c.json({ metadata, data }, 200);
   })
 
   .openapi(create, async (c) => {
     const shipper = c.req.valid("json");
     const result = await db.insert(shippers).values(shipper);
-    return c.json({ shipperId: Number(result.lastInsertRowid) });
+    return c.json({ shipperId: Number(result.lastInsertRowid) }, 201);
   })
 
   .openapi(get, async (c) => {

@@ -3,7 +3,7 @@ import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 
 import type { Env } from "env";
-import { initDbMiddleware } from "util/init-db-middleware";
+import { initDbMiddleware } from "db";
 import { v1 } from "./routes/v1";
 import { errorHandler } from "./util/global-error-handler";
 import { OpenAPIHono } from "@hono/zod-openapi";
@@ -32,6 +32,10 @@ app.get(
 );
 
 /* routes */
+app.get("/dev", (c) => {
+  return c.text(new URLSearchParams(c.req.query()).toString());
+});
+
 const routes = app.route("/v1", v1);
 
 /* for hono RPC */

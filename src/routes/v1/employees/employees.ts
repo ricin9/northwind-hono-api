@@ -6,19 +6,15 @@ import { db } from "db";
 import { employees } from "db/schema";
 import { advancedQuery } from "util/filter-pagination-sorting";
 import { generatePaginationMetadata } from "util/paginationMetadata";
-import { AdvancedSchemaVariables } from "../../../util/types";
 import { create, get, list, update } from "./routes";
 
-export const employeesGroup = new OpenAPIHono<{
-  Variables: AdvancedSchemaVariables;
-}>()
+export const employeesGroup = new OpenAPIHono()
   .openapi(list, async (c) => {
-    const filteringInput = c.get("fpsInput")!;
-
+    const filteringInput = c.req.valid("query");
     const { data, totalCount } = await advancedQuery(employees, filteringInput);
     const metadata = generatePaginationMetadata(c, totalCount);
 
-    return c.json({ metadata, data });
+    return c.json({ metadata, data }, 200);
   })
 
   .openapi(create, async (c) => {

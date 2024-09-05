@@ -1,6 +1,7 @@
 import { createRoute, z } from "@hono/zod-openapi";
 import { customers } from "db/schema";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+import qs from "qs";
 import {
   advancedQueryValidationMiddleware,
   generateFPSSchemaForTable,
@@ -26,7 +27,6 @@ export const list = createRoute({
   summary: "List customers",
   description:
     "Get a list of customers with filtering, pagination, and sorting",
-  middleware: [advancedQueryValidationMiddleware(table)],
   request: {
     query: generateFPSSchemaForTable(table),
   },

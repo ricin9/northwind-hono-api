@@ -1,3 +1,9 @@
+/* this file is a helper to generate a schema for filtering, pagination and sorting */
+/* it can be used with any drizzle sqlite table */
+/* this is specifically made to accomodate clients using url search params to get a filtered sorted paginated list */
+/* search params support object and array nesting using the qs library */
+/* you can copy and paste this file in your proejct, if you don't use search params you can remove qs bit */
+
 import {
   and,
   asc,
@@ -18,14 +24,15 @@ import {
   SQL,
 } from "drizzle-orm";
 import { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
-import { createMiddleware } from "hono/factory";
-import QueryString from "qs";
-import { z } from "zod";
+import { z } from "@hono/zod-openapi";
 import { db } from "../db";
-import { customers } from "db/schema";
+import qs from "qs";
 
 type Table = SQLiteTableWithColumns<any>;
 
+/**
+ * @description returns sqlite column's data affinity (numeric or string)
+ */
 function getColumnDataType(
   table: Table,
   columnName: string
@@ -33,6 +40,10 @@ function getColumnDataType(
   return getTableColumns(table)[columnName].dataType;
 }
 
+/**
+ * @description this is used to convert value to be compared to a sqlite column after getting
+ * sqlite column's type affinity which is either string or number
+ */
 function castStringAs(dataType: "string" | "number", value: string) {
   if (dataType !== "number") return value;
   const newValue = Number(value);
@@ -41,19 +52,6 @@ function castStringAs(dataType: "string" | "number", value: string) {
   }
   return value;
 }
-
-export const advancedQueryValidationMiddleware = (table: Table) =>
-  createMiddleware(async (c, next) => {
-    const queryString = new URL(c.req.url).search.slice(1); // url.search included leadin '?'
-    const parsedQueryParams = QueryString.parse(queryString, { depth: 2 });
-
-    const schema = generateFPSSchemaForTable(table);
-    // TODO do try catch and return nice error msg or implement Hono().onError
-    const data = schema.parse(parsedQueryParams);
-
-    c.set("fpsInput", data);
-    await next();
-  });
 
 const filterOperatorsSchema = z.object({
   // should be refined to only allow valid combinations of operators for same column
@@ -69,59 +67,72 @@ const filterOperatorsSchema = z.object({
   is: z.enum(["null", "notnull"]).optional(),
 });
 
+/**
+ * @description the zod schema that this function produces expects a query string parsed with (URL)SearchParams
+ * as it is done with hono and then reparses with qs instead since hono doesn't parse nested query strings
+ * if you don't need reparsing or just expect the original schema remove the z.preprocess bit
+ * @param table the drizzle sqlite table
+ * @returns a zod schema that receives
+ */
 export function generateFPSSchemaForTable(table: Table) {
   const columns = getTableColumns(table);
   const columnsList = Object.keys(columns) as [string, ...string[]];
   const columnsListEnum = z.enum(columnsList);
 
-  return z
-    .object({
-      page: z.coerce.number().int().positive().default(1),
-      pageSize: z.coerce.number().int().positive().max(250).default(10),
-      sort: z
-        .object({
-          field: columnsListEnum,
-          order: z.enum(["asc", "desc"]).default("asc"),
-        })
-        .array()
-        .default([]),
-      filter: z.record(columnsListEnum, filterOperatorsSchema).optional(),
-    })
-    .superRefine((data, ctx) => {
-      for (const key in data.filter) {
-        // @ts-ignore this is fine because key is already validated to be valid column name
-        const columnIsNumber = getColumnDataType(table, key) === "number";
-        if (columnIsNumber) {
-          for (const operator in data.filter[key]) {
-            if (operator === "like") {
-              ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: `Column ${key} is a number column and does not support ${operator} operator`,
-                fatal: true,
-              });
-              return z.NEVER;
+  return z.preprocess(
+    (val) =>
+      qs.parse(new URLSearchParams(val as Record<string, string>).toString()), // qs to support nested search params
+    z
+      .object({
+        page: z.coerce.number().int().positive().default(1),
+        pageSize: z.coerce.number().int().positive().max(250).default(10),
+        sort: z
+          .object({
+            field: columnsListEnum,
+            order: z.enum(["asc", "desc"]).default("asc"),
+          })
+          .array()
+          .default([]),
+        filter: z.record(columnsListEnum, filterOperatorsSchema).optional(),
+      })
+      .superRefine((data, ctx) => {
+        for (const key in data.filter) {
+          // @ts-ignore this is fine because key is already validated to be valid column name
+          const columnIsNumber = getColumnDataType(table, key) === "number";
+          if (columnIsNumber) {
+            for (const operator in data.filter[key]) {
+              if (operator === "like") {
+                ctx.addIssue({
+                  code: z.ZodIssueCode.custom,
+                  message: `Column ${key} is a number column and does not support ${operator} operator`,
+                  fatal: true,
+                });
+                return z.NEVER;
+              }
             }
           }
         }
-      }
-    });
+      })
+  );
 }
 
 export type AdvancedQuerySchema = z.infer<
   ReturnType<typeof generateFPSSchemaForTable>
 >;
-
-type TableColumns<T extends Table> = keyof ReturnType<
-  typeof getTableColumns<T>
->;
-
+/**
+ *
+ * @param table the drizzle sqlite table that we want to apply filtering pagination and sorting on.
+ * @param fps the filtering pagination and sorting input
+ * @param allowedColumns only these columns will be be fetched if provided, otherwise all columns if not provided
+ * @returns data rows and total count(*) of this query
+ */
 export async function advancedQuery<
   T extends Table,
   U extends T["_"]["columns"] | Omit<T["_"]["columns"], keyof T["_"]["columns"]>
 >(
   table: T,
   fps: AdvancedQuerySchema,
-  allowedColumns?: U // hide sensitive info based on user role?
+  allowedColumns?: U // hide sensitive info based on user role or save bandiwdth?
 ) {
   let dataQuery = (
     allowedColumns

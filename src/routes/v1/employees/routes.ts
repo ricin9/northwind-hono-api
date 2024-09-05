@@ -26,7 +26,6 @@ export const list = createRoute({
   summary: "List employees",
   description:
     "Get a list of employees with filtering, pagination, and sorting",
-  middleware: [advancedQueryValidationMiddleware(table)],
   request: {
     query: generateFPSSchemaForTable(table),
   },

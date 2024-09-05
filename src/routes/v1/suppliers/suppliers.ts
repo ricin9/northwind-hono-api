@@ -6,25 +6,21 @@ import { db } from "db";
 import { suppliers } from "db/schema";
 import { advancedQuery } from "util/filter-pagination-sorting";
 import { generatePaginationMetadata } from "util/paginationMetadata";
-import { AdvancedSchemaVariables } from "../../../util/types";
 import { create, get, list, update } from "./routes";
 
-export const suppliersGroup = new OpenAPIHono<{
-  Variables: AdvancedSchemaVariables;
-}>()
+export const suppliersGroup = new OpenAPIHono()
   .openapi(list, async (c) => {
-    const filteringInput = c.get("fpsInput")!;
-
+    const filteringInput = c.req.valid("query");
     const { data, totalCount } = await advancedQuery(suppliers, filteringInput);
     const metadata = generatePaginationMetadata(c, totalCount);
 
-    return c.json({ metadata, data });
+    return c.json({ metadata, data }, 200);
   })
 
   .openapi(create, async (c) => {
     const supplier = c.req.valid("json");
     const result = await db.insert(suppliers).values(supplier);
-    return c.json({ supplierId: Number(result.lastInsertRowid) });
+    return c.json({ supplierId: Number(result.lastInsertRowid) }, 201);
   })
 
   .openapi(get, async (c) => {
