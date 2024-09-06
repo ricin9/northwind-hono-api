@@ -1,8 +1,8 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { employees } from "@lib/db/schema";
-import { generateFPSSchemaForTable } from "@lib/util/filter-pagination-sorting";
-import { resourceListSchema } from "@lib/util/resource-list-schema";
-import { insureOneProperty } from "@lib/util/validation";
+import { employees } from "../../../lib/db/schema";
+import { generateFPSSchemaForTable } from "../../../lib/util/filter-pagination-sorting";
+import { resourceListSchema } from "../../../lib/util/resource-list-schema";
+import { insureOneProperty } from "../../../lib/util/validation";
 
 const baseInsertEmployeeSchema = createInsertSchema(employees).omit({
   employeeId: true,

@@ -2,7 +2,7 @@ import { Config, createClient } from "@libsql/client";
 import { drizzle, LibSQLDatabase } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 import * as relations from "./relations";
-import { Env } from "env";
+import { Env } from "../../env";
 import { env } from "hono/adapter";
 import { createMiddleware } from "hono/factory";
 

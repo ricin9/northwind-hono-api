@@ -13,8 +13,6 @@
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "paths": {
-      "@lib/*": ["./src/lib/*"],
-    }
+
   },
 }

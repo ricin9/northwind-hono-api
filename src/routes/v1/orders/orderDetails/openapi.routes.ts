@@ -1,5 +1,5 @@
 import { createRoute } from "@hono/zod-openapi";
-import { ZodBadRequestOpenApi } from "@lib/util/zodhttperrorschema";
+import { ZodBadRequestOpenApi } from "../../../../lib/util/zodhttperrorschema";
 import { tags } from "../openapi.routes";
 import {
   insertOrderDetailSchema,
