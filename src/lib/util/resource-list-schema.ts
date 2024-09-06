@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
+import type { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
 import { metadataSchema } from "./paginationMetadata";
 import { createSelectSchema } from "drizzle-zod";
 

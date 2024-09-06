@@ -23,7 +23,7 @@ import {
   sql,
   SQL,
 } from "drizzle-orm";
-import { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
+import type { SQLiteTableWithColumns } from "drizzle-orm/sqlite-core";
 import { z } from "@hono/zod-openapi";
 import { db } from "../db";
 import qs from "qs";

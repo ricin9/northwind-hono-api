@@ -1,4 +1,4 @@
-import { OpenAPIObjectConfigure } from "@hono/zod-openapi";
+import type { OpenAPIObjectConfigure } from "@hono/zod-openapi";
 
 export const openApiInfo: OpenAPIObjectConfigure<any, any> = {
   openapi: "3.0.0",

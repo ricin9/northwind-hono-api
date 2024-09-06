@@ -1,4 +1,4 @@
-import { Context } from "hono";
+import type { Context } from "hono";
 import { z } from "@hono/zod-openapi";
 
 export const metadataSchema = z.object({

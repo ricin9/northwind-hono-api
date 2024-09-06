@@ -1,5 +1,5 @@
 import { z } from "@hono/zod-openapi";
-import { ZodObject, ZodRawShape } from "zod";
+import { ZodObject, type ZodRawShape } from "zod";
 
 export const idParamSchema = z.object({
   id: z.string().pipe(z.coerce.number().min(1)),

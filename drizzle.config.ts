@@ -1,4 +1,4 @@
-import { Config } from "@libsql/client";
+import type { Config } from "@libsql/client";
 import { defineConfig } from "drizzle-kit";
 
 const databaseUrlConfig: Config =
