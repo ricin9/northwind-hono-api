@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": "src",
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -13,6 +12,9 @@
       "@cloudflare/workers-types/2023-07-01"
     ],
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
+    "jsxImportSource": "hono/jsx",
+    "paths": {
+      "@lib/*": ["./src/lib/*"],
+    }
   },
 }

@@ -1,9 +1,9 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { products } from "lib/db/schema";
-import { generateFPSSchemaForTable } from "lib/util/filter-pagination-sorting";
-import { resourceListSchema } from "lib/util/resource-list-schema";
-import { idParamSchema } from "lib/util/validation";
-import { ZodBadRequestOpenApi } from "lib/util/zodhttperrorschema";
+import { products } from "@lib/db/schema";
+import { generateFPSSchemaForTable } from "@lib/util/filter-pagination-sorting";
+import { resourceListSchema } from "@lib/util/resource-list-schema";
+import { idParamSchema } from "@lib/util/validation";
+import { ZodBadRequestOpenApi } from "@lib/util/zodhttperrorschema";
 import {
   insertProductSchema,
   productSchema,

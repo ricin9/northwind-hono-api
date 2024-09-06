@@ -2,10 +2,10 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
-import { db } from "lib/db";
-import { suppliers } from "lib/db/schema";
-import { advancedQuery } from "lib/util/filter-pagination-sorting";
-import { generatePaginationMetadata } from "lib/util/paginationMetadata";
+import { db } from "@lib/db";
+import { suppliers } from "@lib/db/schema";
+import { advancedQuery } from "@lib/util/filter-pagination-sorting";
+import { generatePaginationMetadata } from "@lib/util/paginationMetadata";
 import { create, get, list, update } from "./openapi.routes";
 
 export const suppliersGroup = new OpenAPIHono()

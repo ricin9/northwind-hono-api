@@ -3,10 +3,10 @@ import { eq } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { HTTPException } from "hono/http-exception";
 
-import { db } from "lib/db";
-import { shippers } from "lib/db/schema";
-import { advancedQuery } from "lib/util/filter-pagination-sorting";
-import { generatePaginationMetadata } from "lib/util/paginationMetadata";
+import { db } from "@lib/db";
+import { shippers } from "@lib/db/schema";
+import { advancedQuery } from "@lib/util/filter-pagination-sorting";
+import { generatePaginationMetadata } from "@lib/util/paginationMetadata";
 import { create, get, list, update } from "./openapi.routes.";
 
 export const shippersGroup = new OpenAPIHono()

@@ -2,10 +2,10 @@ import { OpenAPIHono } from "@hono/zod-openapi";
 import { eq, sql } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 
-import { db } from "lib/db";
-import { orderDetails, orders, products } from "lib/db/schema";
-import { advancedQuery } from "lib/util/filter-pagination-sorting";
-import { generatePaginationMetadata } from "lib/util/paginationMetadata";
+import { db } from "@lib/db";
+import { orderDetails, orders, products } from "@lib/db/schema";
+import { advancedQuery } from "@lib/util/filter-pagination-sorting";
+import { generatePaginationMetadata } from "@lib/util/paginationMetadata";
 import { orderDetailsGroup } from "./orderDetails/handler";
 import { create, get, list, update } from "./openapi.routes";
 

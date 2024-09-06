@@ -1,6 +1,6 @@
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { orders } from "lib/db/schema";
-import { insureOneProperty } from "lib/util/validation";
+import { orders } from "@lib/db/schema";
+import { insureOneProperty } from "@lib/util/validation";
 import { customerSchema } from "../customers/schema";
 import { z } from "@hono/zod-openapi";
 import { employeeSchema } from "../employees/schema";
@@ -8,8 +8,8 @@ import {
   insertOrderDetailsSchema,
   orderDetailSchema,
 } from "./orderDetails/schema";
-import { resourceListSchema } from "lib/util/resource-list-schema";
-import { generateFPSSchemaForTable } from "lib/util/filter-pagination-sorting";
+import { resourceListSchema } from "@lib/util/resource-list-schema";
+import { generateFPSSchemaForTable } from "@lib/util/filter-pagination-sorting";
 const baseInsertSchema = createInsertSchema(orders).omit({
   orderId: true,
 });

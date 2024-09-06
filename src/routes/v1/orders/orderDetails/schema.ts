@@ -1,7 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { orderDetails } from "lib/db/schema";
-import { productSchema } from "routes/v1/products/schema";
+import { orderDetails } from "@lib/db/schema";
+import { productSchema } from "../../products/schema";
 
 const baseInsertOrderDetailSchema = createInsertSchema(orderDetails);
 

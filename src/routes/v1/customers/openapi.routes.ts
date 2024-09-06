@@ -1,6 +1,6 @@
 import { createRoute, z } from "@hono/zod-openapi";
-import { idStringParamSchema } from "lib/util/validation";
-import { ZodBadRequestOpenApi } from "lib/util/zodhttperrorschema";
+import { idStringParamSchema } from "@lib/util/validation";
+import { ZodBadRequestOpenApi } from "@lib/util/zodhttperrorschema";
 import {
   insertCustomerSchema,
   customerSchema,
